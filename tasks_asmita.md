@@ -1,0 +1,4 @@
+- center the top navbar overview and dashboard
+- redesign dashboard
+- remove unnecessary stuffs and keep only necessary buttons and shi
+- good luck mona
