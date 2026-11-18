@@ -1,8 +1,6 @@
 # TBO Intelligent Inventory Procurement & Optimization Platform
 ## End-to-End Technical Architecture & Implementation Guide
 
-
-
 ---
 
 ## 1. Executive Summary & Problem Context
