@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
-  Plane, 
-  Building2, 
-  MapPin, 
-  Calendar, 
-  ChevronDown, 
   TrendingUp, 
   BarChart3, 
   Briefcase, 
-  ShieldCheck 
+  ShieldCheck
 } from 'lucide-react';
+import { StrategyInputPanel } from './StrategyInputPanel';
+import type { AllocationStrategyConstraints } from './StrategyInputPanel';
+
+export type { AllocationStrategyConstraints };
 
 interface OverviewHeroProps {
-  onFindOpportunities: () => void;
+  onFindOpportunities?: (constraints?: AllocationStrategyConstraints) => void;
+  onRunStrategy?: (constraints: AllocationStrategyConstraints) => void;
 }
 
 /* ─── Animated counter hook ─── */
@@ -63,12 +63,10 @@ const metrics = [
   { icon: ShieldCheck, value: '92%', label: 'Demand Confidence' },
 ];
 
-export const OverviewHero: React.FC<OverviewHeroProps> = ({ onFindOpportunities }) => {
-  const [selectedFlight, setSelectedFlight] = useState('Flights');
-  const [selectedHotel, setSelectedHotel] = useState('Hotels');
-  const [selectedDestination, setSelectedDestination] = useState('All Destinations');
-  const [selectedPeriod, setSelectedPeriod] = useState('Next 3 Months');
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+export const OverviewHero: React.FC<OverviewHeroProps> = ({ 
+  onFindOpportunities, 
+  onRunStrategy 
+}) => {
   const [heroVisible, setHeroVisible] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
 
@@ -91,55 +89,13 @@ export const OverviewHero: React.FC<OverviewHeroProps> = ({ onFindOpportunities 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (activeDropdown && heroRef.current && !heroRef.current.contains(e.target as Node)) {
-        setActiveDropdown(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [activeDropdown]);
-
-  // Close dropdown on Escape
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setActiveDropdown(null);
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, []);
-
-  const toggleDropdown = (name: string) => {
-    setActiveDropdown(activeDropdown === name ? null : name);
+  const handleStrategySubmit = (constraints: AllocationStrategyConstraints) => {
+    if (onRunStrategy) {
+      onRunStrategy(constraints);
+    } else if (onFindOpportunities) {
+      onFindOpportunities(constraints);
+    }
   };
-
-  const dropdownItems: Record<string, { options: string[]; setter: (v: string) => void }> = {
-    flights: {
-      options: ['Direct Wholesale', 'Charter Allotments', 'Round-trip Packages'],
-      setter: setSelectedFlight,
-    },
-    hotels: {
-      options: ['5-Star Luxury Resorts', 'City Business Hotels', 'Boutique Villas', 'All Hotel Tiers'],
-      setter: setSelectedHotel,
-    },
-    destinations: {
-      options: ['All Destinations', 'Dubai & UAE', 'Goa, India', 'Swiss Alps', 'Bali, Indonesia', 'Phuket, Thailand'],
-      setter: setSelectedDestination,
-    },
-    period: {
-      options: ['Next 30 Days', 'Next 3 Months', '3–6 Months', 'Holiday Season Peak'],
-      setter: setSelectedPeriod,
-    },
-  };
-
-  const searchSegments = [
-    { key: 'flights', icon: Plane, value: selectedFlight, border: true },
-    { key: 'hotels', icon: Building2, value: selectedHotel, border: true },
-    { key: 'destinations', icon: MapPin, value: selectedDestination, border: true },
-    { key: 'period', icon: Calendar, value: selectedPeriod, border: false },
-  ];
 
   return (
     <div ref={heroRef} className="relative min-h-screen w-full flex flex-col justify-between items-center text-white select-none font-sans px-4 sm:px-6 md:px-8 pt-24 sm:pt-28 md:pt-32 pb-8 sm:pb-12">
@@ -159,7 +115,7 @@ export const OverviewHero: React.FC<OverviewHeroProps> = ({ onFindOpportunities 
       </div>
 
       {/* Center Hero Content */}
-      <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center text-center mt-[2cm]">
+      <div className="relative z-10 w-full max-w-5xl mx-auto flex flex-col items-center text-center mt-[1.5cm] sm:mt-[2cm]">
         
         {/* Headline — balanced editorial staggered layout with symmetric optical anchoring */}
         <h1 
@@ -175,116 +131,57 @@ export const OverviewHero: React.FC<OverviewHeroProps> = ({ onFindOpportunities 
           </span>
         </h1>
 
-        {/* Subtitle — restored font size with optical center alignment */}
+        {/* Subtitle */}
         <p 
-          className={`text-sm sm:text-base md:text-[17px] text-gray-100/95 font-normal sm:font-medium max-w-2xl mx-auto mb-8 leading-relaxed text-center drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] transition-all duration-700 delay-150 ease-spring ${
+          className={`text-sm sm:text-base md:text-[17px] text-gray-100/95 font-normal sm:font-medium max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed text-center drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] transition-all duration-700 delay-150 ease-spring ${
             heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          Discover high-opportunity travel inventory and optimize your investment strategy.
+          Set institutional procurement constraints and optimize capital allocation across wholesale hotel inventory.
         </p>
 
-        {/* Search Bar */}
+        {/* B2B "Strategy Input" Panel (Refactored from consumer search bar) */}
         <div 
-          className={`w-full max-w-[800px] glass-dark rounded-xl p-1.5 flex flex-col sm:flex-row items-stretch sm:items-center shadow-glass relative transition-all duration-700 delay-300 ease-spring ${
+          className={`w-full transition-all duration-700 delay-300 ease-spring ${
             heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          {searchSegments.map((seg) => (
-            <div key={seg.key} className="relative flex-1">
-              <button
-                type="button"
-                onClick={() => toggleDropdown(seg.key)}
-                aria-expanded={activeDropdown === seg.key}
-                aria-haspopup="listbox"
-                className={`w-full h-full px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs font-medium text-gray-200 hover:text-white transition-all duration-200 rounded-lg hover:bg-white/[0.06] ${
-                  seg.border ? 'sm:border-r sm:border-white/10' : ''
-                } ${activeDropdown === seg.key ? 'bg-white/[0.08] text-white' : ''}`}
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <seg.icon className="w-3.5 h-3.5 text-gray-300 shrink-0" />
-                  <span className="truncate">{seg.value}</span>
-                </div>
-                <ChevronDown className={`w-3 h-3 text-gray-400 shrink-0 transition-transform duration-200 ${
-                  activeDropdown === seg.key ? 'rotate-180' : ''
-                }`} />
-              </button>
-
-              {/* Dropdown with animated entrance */}
-              {activeDropdown === seg.key && (
-                <div 
-                  role="listbox"
-                  className="absolute left-0 top-full mt-2 w-48 bg-gray-950/95 backdrop-blur-xl border border-white/15 rounded-xl shadow-elevation-4 p-1.5 z-30 text-left text-xs animate-scale-in origin-top"
-                >
-                  {dropdownItems[seg.key].options.map((opt) => (
-                    <button
-                      key={opt}
-                      role="option"
-                      aria-selected={seg.value === opt}
-                      onClick={() => { dropdownItems[seg.key].setter(opt); setActiveDropdown(null); }}
-                      className={`w-full px-3 py-2 rounded-lg text-left transition-all duration-150 ${
-                        seg.value === opt 
-                          ? 'text-white bg-white/10 font-medium' 
-                          : 'text-gray-300 hover:text-white hover:bg-white/[0.06]'
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* CTA Button */}
-          <div className="sm:pl-1 mt-1 sm:mt-0">
-            <button
-              type="button"
-              onClick={onFindOpportunities}
-              className="w-full sm:w-auto px-5 py-2.5 bg-white hover:bg-gray-50 text-gray-950 font-semibold text-xs rounded-lg shadow-elevation-2 transition-all duration-200 active:scale-[0.97] hover:shadow-elevation-3 whitespace-nowrap"
-            >
-              Find Opportunities
-            </button>
-          </div>
+          <StrategyInputPanel onSubmit={handleStrategySubmit} />
         </div>
 
         {/* Sub-label */}
         <div 
-          className={`flex items-center justify-center gap-1.5 mt-3.5 text-[11px] text-gray-200/90 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] transition-all duration-700 delay-400 ease-spring ${
+          className={`flex items-center justify-center gap-2 mt-3.5 text-[11px] text-gray-200/90 font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] transition-all duration-700 delay-400 ease-spring ${
             heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
           }`}
         >
-          <MapPin className="w-3 h-3 text-gray-300/80" />
-          <span>Global Travel Market • Live Insights</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>MILP Budget Optimization & Newsvendor Critical Fractile Model</span>
         </div>
       </div>
 
-      {/* Bottom 4 Metric Cards — staggered entrance */}
-      <div className="relative z-10 w-full max-w-[1020px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mt-12 sm:mt-16 md:mt-20">
-        {metrics.map((metric, i) => {
-          const Icon = metric.icon;
-          return (
-            <div 
-              key={metric.label}
-              className={`group glass-dark rounded-xl p-4 sm:p-5 flex flex-col justify-between text-left h-[115px] sm:h-[125px] shadow-glass transition-all duration-500 ease-spring cursor-default hover:border-white/25 hover:-translate-y-1 hover:shadow-elevation-4 ${
-                heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-              style={{ transitionDelay: heroVisible ? `${500 + i * 120}ms` : '0ms' }}
-            >
-              <div>
-                <Icon className="w-4 h-4 text-white/80 group-hover:text-white transition-colors duration-200" />
-              </div>
-              <div>
-                <div className="text-2xl sm:text-[28px] font-bold text-white tracking-tight leading-none mb-1">
-                  {counters[i].display}
-                </div>
-                <div className="text-[11px] text-gray-300/90 font-medium truncate">
-                  {metric.label}
-                </div>
-              </div>
+      {/* Bottom Metric Cards */}
+      <div 
+        className={`relative z-10 w-full max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-8 transition-all duration-700 delay-500 ease-spring ${
+          heroVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+        }`}
+      >
+        {metrics.map((m, idx) => (
+          <div
+            key={m.label}
+            className="glass-dark rounded-xl p-3.5 sm:p-4 text-left transition-all duration-300 hover:bg-white/[0.12] hover:-translate-y-0.5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] sm:text-xs text-gray-300/90 font-medium truncate">
+                {m.label}
+              </span>
+              <m.icon className="w-3.5 h-3.5 text-gray-400 shrink-0" />
             </div>
-          );
-        })}
+            <div className="text-xl sm:text-2xl font-bold tracking-tight text-white font-mono tabular-nums">
+              {counters[idx].display}
+            </div>
+          </div>
+        ))}
       </div>
 
     </div>
