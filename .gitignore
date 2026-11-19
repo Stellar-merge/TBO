@@ -2,8 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
 
 # Distribution / packaging
@@ -55,6 +53,8 @@ Thumbs.db
 
 # Datasets - large raw files (>100MB blocked by GitHub)
 Datasets/
+*.csv
+archive (3)/
 
 # Offline training data splits (reproducible from scripts; prevents HTTP 408 timeout on push)
 Models/Model2_Booking_Conversion/data/interim/*.parquet
@@ -67,3 +67,4 @@ Models/Model2_Booking_Conversion/data/processed/*.parquet
 .vscode/
 .idea/
 *.swp
+*.env
