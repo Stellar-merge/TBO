@@ -33,6 +33,7 @@ import {
 import { initialOpportunities } from '../data/opportunityDeals';
 import type { OpportunityCardItem } from '../data/opportunityDeals';
 import { OpportunityDetailModal } from './OpportunityDetailModal';
+import { ChatbotWidget } from './ChatbotWidget';
 import { optimizeProcurement } from '../services/api';
 
 /* ─── Smooth Animated Number Hook (Matching Overview counter animations) ─── */
@@ -1921,6 +1922,12 @@ export const CleanDashboard: React.FC = () => {
       <OpportunityDetailModal
         item={modalItem}
         onClose={() => setModalItem(null)}
+      />
+
+      {/* ─── Floating Support & AI Chatbot Widget (Cute Teddy Bear Trigger) ─── */}
+      <ChatbotWidget
+        activeAssetClass={activeAssetClass}
+        currentDestination={airbnbLocation}
       />
 
     </div>
