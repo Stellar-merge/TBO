@@ -3,8 +3,8 @@ export interface OpportunityCardItem {
   title: string;
   city: string;
   destination: 'India' | 'Middle East' | 'Southeast Asia' | 'Europe' | 'Americas' | string;
-  inventoryType: 'Hotels';
-  hotelCategory: 'Luxury Resorts' | 'City Business' | 'Boutique Stays' | 'Heritage Villas';
+  inventoryType: 'Hotels' | 'Flights';
+  hotelCategory: 'Luxury Resorts' | 'City Business' | 'Boutique Stays' | 'Heritage Villas' | string;
   travelWindow: 'Next 30 Days' | '31–60 Days' | 'Holiday Peak';
   image: string;
   bookmarked: boolean;

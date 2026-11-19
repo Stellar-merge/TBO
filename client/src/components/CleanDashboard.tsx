@@ -27,13 +27,58 @@ import {
   Palmtree,
   Zap,
   Globe,
-  MapPin
+  MapPin,
+  RefreshCw
 } from 'lucide-react';
 import { initialOpportunities } from '../data/opportunityDeals';
 import type { OpportunityCardItem } from '../data/opportunityDeals';
 import { OpportunityDetailModal } from './OpportunityDetailModal';
+import { optimizeProcurement } from '../services/api';
+
+/* ─── Smooth Animated Number Hook (Matching Overview counter animations) ─── */
+function useAnimatedNumber(target: number, duration = 1000, trigger = true) {
+  const [val, setVal] = useState(0);
+
+  useEffect(() => {
+    if (!trigger) return;
+    let startTime: number | null = null;
+    let frameId: number;
+
+    const startVal = 0;
+    const diff = target - startVal;
+
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const elapsed = timestamp - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setVal(Math.round(startVal + diff * eased));
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(step);
+      } else {
+        setVal(target);
+      }
+    };
+
+    frameId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frameId);
+  }, [target, duration, trigger]);
+
+  return val;
+}
 
 export const CleanDashboard: React.FC = () => {
+  // Entrance Animation Trigger (Staggered cinematic entrance matching OverviewHero)
+  const [dashboardVisible, setDashboardVisible] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDashboardVisible(true);
+    }, 40);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Opportunities Data
   const [items, setItems] = useState<OpportunityCardItem[]>(initialOpportunities);
   const [selectedId, setSelectedId] = useState<string>('dumble-st');
@@ -320,10 +365,8 @@ export const CleanDashboard: React.FC = () => {
     }
   };
 
-  // 2. Hotel Category Tabs
-  const [activeCategory, setActiveCategory] = useState<
-    'All' | 'Luxury Resorts' | 'City Business' | 'Boutique Stays' | 'Heritage Villas' | 'High Margin'
-  >('All');
+  // 2. Category Tabs (Hotels & Flights)
+  const [activeCategory, setActiveCategory] = useState<string>('All');
 
   // 3. Sub-section Constraints, Sorting & Map Layers (Image 2 UI Reference)
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -335,10 +378,89 @@ export const CleanDashboard: React.FC = () => {
   const sortRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
 
-  // Budget Tracker Bar State (Synchronized with airbnbBudget)
-  const [budgetUsed] = useState<number>(120000);
+  // Backend & Optimization Engine State
+  const [isBackendOnline, setIsBackendOnline] = useState<boolean>(false);
+  const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
+  const [budgetUsed, setBudgetUsed] = useState<number>(120000);
+  const [backendRoi, setBackendRoi] = useState<string>('24.8');
+  const [backendRiskDial, setBackendRiskDial] = useState<number>(42);
   const budgetTotal = airbnbBudget;
-  const budgetPercentage = Math.min(100, Math.round((budgetUsed / budgetTotal) * 100));
+  const budgetPercentage = Math.min(100, Math.round((budgetUsed / (budgetTotal || 1)) * 100));
+
+  // Run Optimization Engine against FastAPI Backend (or fallback gracefully to seed catalog)
+  const runOptimization = React.useCallback(async () => {
+    setIsOptimizing(true);
+    try {
+      const res = await optimizeProcurement({
+        location: airbnbLocation || 'Bali, Indonesia',
+        dates: { startDate: airbnbStartDate, endDate: airbnbEndDate },
+        budget: airbnbBudget,
+        riskTolerance: airbnbRisk === 'Conservative' ? 'P10 Conservative' : airbnbRisk === 'Aggressive' ? 'P90 Aggressive' : 'P50 Balanced',
+        category: activeCategory === 'All' ? 'All Hotels' : activeCategory,
+        targetType: activeAssetClass,
+      });
+
+      if (res && res.status === 'success') {
+        setIsBackendOnline(true);
+        setBudgetUsed(res.summary.allocatedBudget);
+        setBackendRoi(res.summary.expectedRoi.toFixed(1));
+        setBackendRiskDial(res.summary.riskDialScore);
+
+        if (res.items && res.items.length > 0) {
+          const mapped: OpportunityCardItem[] = res.items.map((it, idx) => ({
+            id: it.id,
+            title: it.name,
+            city: it.location,
+            destination: 'Southeast Asia',
+            inventoryType: activeAssetClass === 'flights' ? 'Flights' : 'Hotels',
+            hotelCategory: (it.category as any) || (activeAssetClass === 'flights' ? 'Direct Carrier' : 'Luxury Resorts'),
+            travelWindow: 'Next 30 Days',
+            image: it.image,
+            bookmarked: false,
+            price: `$${Math.round(it.batchCost).toLocaleString()}`,
+            priceNum: it.batchCost,
+            expectedProfit: `+$${Math.round(it.expectedProfit).toLocaleString()}`,
+            expectedProfitNum: it.expectedProfit,
+            allocatedAmount: it.batchCost,
+            rooms: it.roomsOrSeats,
+            demandLift: `+${Math.round(it.opportunityScore)}% Demand`,
+            margin: `${Math.round(it.profitMargin)}% Margin`,
+            rating: it.rating,
+            reviews: it.reviewsCount,
+            mapCoords: {
+              x: 18 + ((idx * 24) % 65),
+              y: 22 + ((idx * 29) % 55),
+            },
+            metric1: { label: 'Allocated', value: `${it.procuredUnits} Units` },
+            metric2: { label: 'Wholesale', value: activeAssetClass === 'flights' ? `$${Math.round(it.wholesaleCostPerUnit)}/seat` : `$${Math.round(it.wholesaleCostPerUnit)}/nt` },
+            metric3: { label: 'P50 Forecast', value: activeAssetClass === 'flights' ? `${it.demandQuantileP50} s/d` : `${it.demandQuantileP50} r/d` },
+            wholesaleCost: it.wholesaleCostPerUnit,
+            targetPrice: it.targetSellingPrice,
+            recommendedUnits: it.procuredUnits,
+            p10: it.demandQuantileP10,
+            p50: it.demandQuantileP50,
+            p90: it.demandQuantileP90,
+            cancellationRisk: Math.round(it.cancellationProb * 100),
+            riskRating: it.riskClass === 'BALANCED' ? 'Low' : it.riskClass === 'SHORTAGE' ? 'Medium' : 'High',
+          }));
+          setItems(mapped);
+          setSelectedId(mapped[0].id);
+        }
+      } else {
+        setIsBackendOnline(false);
+      }
+    } catch (e) {
+      console.warn('Backend call failed:', e);
+      setIsBackendOnline(false);
+    } finally {
+      setIsOptimizing(false);
+    }
+  }, [airbnbLocation, airbnbStartDate, airbnbEndDate, airbnbBudget, airbnbRisk, activeCategory, activeAssetClass]);
+
+  // Initial and reactive trigger
+  useEffect(() => {
+    runOptimization();
+  }, [runOptimization]);
 
   // View Mode: 'split' | 'list' | 'map'
   const [viewMode, setViewMode] = useState<'split' | 'list' | 'map'>('split');
@@ -352,22 +474,33 @@ export const CleanDashboard: React.FC = () => {
     return items.find((it) => it.id === selectedId) || items[0];
   }, [items, selectedId]);
 
-  // Hotel category options list
-  const hotelCategories = [
-    { id: 'All', label: 'All Hotels' },
-    { id: 'Luxury Resorts', label: 'Luxury Resorts' },
-    { id: 'City Business', label: 'City Business' },
-    { id: 'Boutique Stays', label: 'Boutique Stays' },
-    { id: 'Heritage Villas', label: 'Heritage Villas' },
-    { id: 'High Margin', label: 'High Margin' },
-  ] as const;
+  // Dynamic Categories based on Active Asset Class
+  const hotelCategories = useMemo(() => {
+    if (activeAssetClass === 'flights') {
+      return [
+        { id: 'All', label: 'All Flights' },
+        { id: 'First & Business', label: 'First & Business' },
+        { id: 'Direct Carrier', label: 'Direct Carrier' },
+        { id: 'Economy Blocks', label: 'Economy Blocks' },
+      ];
+    }
+    return [
+      { id: 'All', label: 'All Hotels' },
+      { id: 'Luxury Resorts', label: 'Luxury Resorts' },
+      { id: 'City Business', label: 'City Business' },
+      { id: 'Boutique Stays', label: 'Boutique Stays' },
+      { id: 'Heritage Villas', label: 'Heritage Villas' },
+      { id: 'High Margin', label: 'High Margin' },
+    ];
+  }, [activeAssetClass]);
 
   // Filtered & Sorted Items
   const filteredAndSortedItems = useMemo(() => {
     let result = items.filter((item) => {
-      // Asset class
-      if (activeAssetClass === 'flights') {
-        return false;
+      // Asset class filter
+      if (item.inventoryType) {
+        if (activeAssetClass === 'flights' && item.inventoryType !== 'Flights') return false;
+        if (activeAssetClass === 'hotels' && item.inventoryType !== 'Hotels') return false;
       }
 
       // Category Tab Filter
@@ -444,7 +577,13 @@ export const CleanDashboard: React.FC = () => {
     return filteredAndSortedItems.reduce((acc, it) => acc + it.expectedProfitNum, 0);
   }, [filteredAndSortedItems]);
 
-  const projectedROI = totalAllocated > 0 ? ((totalProfit / totalAllocated) * 100).toFixed(1) : '24.8';
+  const projectedROI = totalAllocated > 0 ? ((totalProfit / totalAllocated) * 100).toFixed(1) : backendRoi;
+
+  // Animated Numbers for Liquidity & Portfolio Strip (Smooth Ease-Out roll matching Overview)
+  const animatedBudgetUsed = useAnimatedNumber(budgetUsed, 1100, dashboardVisible);
+  const animatedRemaining = useAnimatedNumber(Math.max(0, budgetTotal - budgetUsed), 1200, dashboardVisible);
+  const animatedAllocated = useAnimatedNumber(totalAllocated, 1300, dashboardVisible);
+  const animatedPercentage = useAnimatedNumber(budgetPercentage, 1000, dashboardVisible);
 
   // Toggle Bookmark
   const handleToggleBookmark = (id: string, e: React.MouseEvent) => {
@@ -520,8 +659,12 @@ export const CleanDashboard: React.FC = () => {
     <div className="w-full min-h-screen bg-[#F8F9FA] text-slate-900 pb-16 font-sans select-none antialiased">
       
       {/* ─── Airbnb-Style Procurement Query Header (Exact replica of user reference image) ─── */}
-      <div className="bg-[#F8F9FA] border-b border-slate-200/80 pt-6 pb-6 px-4 sm:px-8">
-        <div ref={airbnbBarRef} className="max-w-[960px] mx-auto flex flex-col items-center">
+      <div className={`bg-[#F8F9FA] border-b border-slate-200/80 pt-6 pb-6 px-4 sm:px-8 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        dashboardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-5'
+      }`}>
+        <div ref={airbnbBarRef} className={`max-w-[960px] mx-auto flex flex-col items-center transition-all duration-700 delay-75 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          dashboardVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.98]'
+        }`}>
           
           {/* TOP: Category Tabs (Hotels | Flights) with Active Underline */}
           <div className="flex items-center gap-12 mb-4 select-none">
@@ -732,14 +875,19 @@ export const CleanDashboard: React.FC = () => {
               type="button"
               onClick={() => {
                 setActiveAirbnbSegment(null);
-                setSelectedId('dumble-st');
+                runOptimization();
                 setPopupVisible(true);
               }}
-              className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-[#0D4E43] hover:bg-[#09352e] active:scale-95 text-white flex items-center justify-center shrink-0 shadow-md hover:shadow-lg transition-all cursor-pointer ml-2 mr-1"
+              disabled={isOptimizing}
+              className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-[#0D4E43] hover:bg-[#09352e] active:scale-95 text-white flex items-center justify-center shrink-0 shadow-md hover:shadow-lg transition-all cursor-pointer ml-2 mr-1 disabled:opacity-80"
               aria-label="Search and run engine"
               title="Search and run engine"
             >
-              <Search className="w-5 h-5 stroke-[2.8]" />
+              {isOptimizing ? (
+                <RefreshCw className="w-5 h-5 stroke-[2.8] animate-spin" />
+              ) : (
+                <Search className="w-5 h-5 stroke-[2.8]" />
+              )}
             </button>
 
             {/* ─── 1. Budget Popover (Clean Airbnb Pills Matching Dates Flexibility Style) ─── */}
@@ -1040,7 +1188,9 @@ export const CleanDashboard: React.FC = () => {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-5 space-y-4">
         
         {/* ─── Wholesale Capital Liquidity & Portfolio Bar (Valuable Revenue Management Strip) ─── */}
-        <div className="bg-white rounded-2xl p-4 sm:px-6 sm:py-4 border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className={`bg-white rounded-2xl p-4 sm:px-6 sm:py-4 border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-700 delay-100 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          dashboardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
+        }`}>
           
           {/* Left: Indicator & Budget Used Display */}
           <div className="flex items-center gap-3.5">
@@ -1050,14 +1200,22 @@ export const CleanDashboard: React.FC = () => {
             <div>
               <div className="flex items-center gap-2.5">
                 <span className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
-                  Budget Used: <strong className="font-black font-mono text-slate-950 text-base sm:text-lg">${budgetUsed.toLocaleString()}</strong> / <span className="font-mono text-slate-500 font-bold">${budgetTotal.toLocaleString()}</span>
+                  Budget Used: <strong className="font-black font-mono text-slate-950 text-base sm:text-lg">${animatedBudgetUsed.toLocaleString()}</strong> / <span className="font-mono text-slate-500 font-bold">${budgetTotal.toLocaleString()}</span>
                 </span>
                 <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#0D4E43] border border-emerald-300/80 font-mono">
-                  {budgetPercentage}% Deployed
+                  {animatedPercentage}% Deployed
+                </span>
+                <span className={`inline-flex items-center gap-1.5 text-xs font-black px-2.5 py-0.5 rounded-full border ${
+                  isBackendOnline 
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                    : 'bg-slate-100 text-slate-700 border-slate-200'
+                }`}>
+                  <span className={`w-2 h-2 rounded-full ${isBackendOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                  {isBackendOnline ? 'FastAPI ML Engine Online' : 'Seed Catalog Standby'}
                 </span>
               </div>
               <span className="text-xs sm:text-sm text-slate-600 font-semibold">
-                ${(budgetTotal - budgetUsed).toLocaleString()} remaining liquidity for pre-buy commitments
+                ${animatedRemaining.toLocaleString()} remaining liquidity for pre-buy commitments
               </span>
             </div>
           </div>
@@ -1067,8 +1225,8 @@ export const CleanDashboard: React.FC = () => {
             <div className="flex items-center gap-3 flex-1 max-w-xs">
               <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60 p-0.5">
                 <div 
-                  className="h-full bg-[#0D4E43] rounded-full transition-all duration-500 ease-spring"
-                  style={{ width: `${budgetPercentage}%` }}
+                  className="h-full bg-[#0D4E43] rounded-full transition-all duration-700 ease-spring"
+                  style={{ width: `${animatedPercentage}%` }}
                 />
               </div>
               <span className="text-xs font-bold text-slate-600 whitespace-nowrap hidden sm:inline">
@@ -1081,7 +1239,7 @@ export const CleanDashboard: React.FC = () => {
             <div className="hidden md:flex items-center gap-5 text-sm font-semibold">
               <div>
                 <span className="text-slate-400 block text-[11px] uppercase font-black tracking-wider">Capital Allocated</span>
-                <span className="font-mono font-black text-slate-950 text-base sm:text-lg">${totalAllocated.toLocaleString()}</span>
+                <span className="font-mono font-black text-slate-950 text-base sm:text-lg">${animatedAllocated.toLocaleString()}</span>
               </div>
               <div>
                 <span className="text-slate-400 block text-[11px] uppercase font-black tracking-wider">Projected ROI</span>
@@ -1090,13 +1248,22 @@ export const CleanDashboard: React.FC = () => {
                   +{projectedROI}%
                 </span>
               </div>
+              <div>
+                <span className="text-slate-400 block text-[11px] uppercase font-black tracking-wider">Risk Dial</span>
+                <span className="inline-flex items-center gap-1 font-mono font-black text-slate-950 text-base sm:text-lg">
+                  <ShieldCheck className="w-4 h-4 text-[#0D4E43]" />
+                  {backendRiskDial}/100
+                </span>
+              </div>
             </div>
           </div>
 
         </div>
 
         {/* ─── Results Header & Dismissable Active Constraint Tags (Image 2 Replica) ─── */}
-        <div className="pt-2">
+        <div className={`pt-2 transition-all duration-700 delay-150 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          dashboardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}>
           {/* Top Line: Heading and Sort by Dropdown */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2.5">
             <div>
@@ -1258,7 +1425,9 @@ export const CleanDashboard: React.FC = () => {
         </div>
 
         {/* ─── Controls Toolbar: Hotel Category Condensed Dropdown (Left) & ALWAYS ON RIGHT List/Map Switcher ─── */}
-        <div className="flex items-center justify-between gap-3 pt-3 pb-1">
+        <div className={`flex items-center justify-between gap-3 pt-3 pb-1 transition-all duration-700 delay-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          dashboardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}>
           {/* Left: Hotel Category Condensed Dropdown with Icon */}
           <div ref={categoryRef} className="relative">
             <button
@@ -1267,10 +1436,14 @@ export const CleanDashboard: React.FC = () => {
               className="flex items-center gap-2.5 px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-full text-xs sm:text-sm font-extrabold text-slate-900 shadow-xs transition-all cursor-pointer"
             >
               <div className="w-5 h-5 rounded-md bg-[#0D4E43]/10 text-[#0D4E43] flex items-center justify-center shrink-0">
-                <Building2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                {activeAssetClass === 'flights' ? (
+                  <Plane className="w-3.5 h-3.5 stroke-[2.5]" />
+                ) : (
+                  <Building2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                )}
               </div>
               <span>
-                {activeCategory === 'All' ? 'All Hotel Categories' : activeCategory}
+                {activeCategory === 'All' ? (activeAssetClass === 'flights' ? 'All Flight Categories' : 'All Hotel Categories') : activeCategory}
               </span>
               <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -1278,7 +1451,7 @@ export const CleanDashboard: React.FC = () => {
             {isCategoryOpen && (
               <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200/90 p-1.5 z-40 animate-scale-in">
                 <span className="text-[11px] font-black text-slate-400 uppercase px-3 py-1.5 block tracking-wider">
-                  Select Hotel Category
+                  Select {activeAssetClass === 'flights' ? 'Flight' : 'Hotel'} Category
                 </span>
                 {hotelCategories.map((cat) => (
                   <button
@@ -1348,13 +1521,18 @@ export const CleanDashboard: React.FC = () => {
               
               {/* Cards Grid (Image 2 Replica with prominent typography, crisp badges, and specs) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {filteredAndSortedItems.map((item) => {
+                {filteredAndSortedItems.map((item, idx) => {
                   const isSelected = item.id === selectedId;
                   return (
                     <div
                       key={item.id}
                       onClick={() => handleSelectItem(item.id)}
-                      className={`group bg-white rounded-2xl p-3.5 border transition-all duration-300 overflow-hidden cursor-pointer flex flex-col select-none ${
+                      style={{
+                        transitionDelay: `${dashboardVisible ? 240 + Math.min(idx, 8) * 60 : 0}ms`,
+                      }}
+                      className={`group bg-white rounded-2xl p-3.5 border transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden cursor-pointer flex flex-col select-none ${
+                        dashboardVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-[0.98]'
+                      } ${
                         isSelected 
                           ? 'border-slate-950 shadow-md ring-2 ring-slate-950/10' 
                           : 'border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 hover:border-slate-300'
@@ -1422,8 +1600,12 @@ export const CleanDashboard: React.FC = () => {
                         {/* Specs Row with Clean Icons (Image 2 Specs Style) */}
                         <div className="flex items-center justify-between text-xs sm:text-sm text-slate-700 font-bold pt-2.5 border-t border-slate-100">
                           <div className="flex items-center gap-1.5">
-                            <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
-                            <span>{item.rooms} Rooms</span>
+                            {item.inventoryType === 'Flights' ? (
+                              <Plane className="w-4 h-4 text-slate-400 shrink-0" />
+                            ) : (
+                              <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+                            )}
+                            <span>{item.rooms} {item.inventoryType === 'Flights' ? 'Seats' : 'Rooms'}</span>
                           </div>
                           
                           <div className="flex items-center gap-1 text-slate-800 font-black">
@@ -1448,7 +1630,9 @@ export const CleanDashboard: React.FC = () => {
 
           {/* ─── Right Side: Interactive Vector Map (Image 2 Replica) ─── */}
           {viewMode !== 'list' && (
-            <div className={`relative ${
+            <div className={`relative transition-all duration-700 delay-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+              dashboardVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-[0.98]'
+            } ${
               viewMode === 'map' ? 'col-span-full' : 'lg:col-span-6 xl:col-span-6'
             }`}>
               

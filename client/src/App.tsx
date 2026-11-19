@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MainNavbar } from './components/MainNavbar';
 import { OverviewHero } from './components/OverviewHero';
 import { CleanDashboard } from './components/CleanDashboard';
@@ -26,25 +27,51 @@ export default function App() {
         isOverDashboard={isOverDashboard}
       />
 
-      {/* 2. Discrete Page Views */}
-      {activePage === 'overview' ? (
-        <main id="overview-section" className="w-full relative min-h-screen">
-          <OverviewHero
-            onFindOpportunities={() => handleNavigate('dashboard')}
-            onRunStrategy={() => handleNavigate('dashboard')}
-          />
-        </main>
-      ) : activePage === 'wishlists' ? (
-        <main id="wishlists-section" className="w-full bg-[#F8F9FA] min-h-screen pt-[56px]">
-          <WishlistsView
-            onNavigateToDashboard={() => handleNavigate('dashboard')}
-          />
-        </main>
-      ) : (
-        <main id="dashboard-section" className="w-full bg-[#F8F9FA] min-h-screen pt-[56px]">
-          <CleanDashboard />
-        </main>
-      )}
+      {/* 2. Discrete Page Views with Smooth Spring Transitions */}
+      <AnimatePresence mode="wait">
+        {activePage === 'overview' ? (
+          <motion.main 
+            key="overview"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            id="overview-section" 
+            className="w-full relative min-h-screen"
+          >
+            <OverviewHero
+              onFindOpportunities={() => handleNavigate('dashboard')}
+              onRunStrategy={() => handleNavigate('dashboard')}
+            />
+          </motion.main>
+        ) : activePage === 'wishlists' ? (
+          <motion.main 
+            key="wishlists"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            id="wishlists-section" 
+            className="w-full bg-[#F8F9FA] min-h-screen pt-[56px]"
+          >
+            <WishlistsView
+              onNavigateToDashboard={() => handleNavigate('dashboard')}
+            />
+          </motion.main>
+        ) : (
+          <motion.main 
+            key="dashboard"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            id="dashboard-section" 
+            className="w-full bg-[#F8F9FA] min-h-screen pt-[56px]"
+          >
+            <CleanDashboard />
+          </motion.main>
+        )}
+      </AnimatePresence>
 
     </div>
   );

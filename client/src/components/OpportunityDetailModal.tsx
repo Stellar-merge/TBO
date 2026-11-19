@@ -130,9 +130,14 @@ const ModalContent: React.FC<{ item: OpportunityCardItem; onClose: () => void }>
           {/* Economics Table */}
           <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-2.5 text-xs">
             {[
-              { label: 'Wholesale Pre-buy Rate', value: `$${item.wholesaleCost} / unit`, bold: false },
-              { label: 'Target Distribution Price', value: `$${item.targetPrice} / unit`, bold: false },
-              { label: 'Calibrated Cancellation Risk', value: `${(item.cancellationRisk * 100).toFixed(0)}%`, bold: false, color: 'text-amber-600' },
+              { label: item.inventoryType === 'Flights' ? 'Wholesale Seat Rate' : 'Wholesale Pre-buy Rate', value: `$${item.wholesaleCost} / ${item.inventoryType === 'Flights' ? 'seat' : 'unit'}`, bold: false },
+              { label: item.inventoryType === 'Flights' ? 'Target Selling Price' : 'Target Distribution Price', value: `$${item.targetPrice} / ${item.inventoryType === 'Flights' ? 'seat' : 'unit'}`, bold: false },
+              { 
+                label: item.inventoryType === 'Flights' ? 'Model 3 Flight Cancellation Risk' : 'Calibrated Cancellation Risk', 
+                value: `${item.cancellationRisk > 1 ? item.cancellationRisk.toFixed(0) : (item.cancellationRisk * 100).toFixed(0)}%`, 
+                bold: false, 
+                color: 'text-amber-600' 
+              },
             ].map((row) => (
               <div key={row.label} className="flex justify-between text-gray-600">
                 <span>{row.label}</span>
