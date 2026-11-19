@@ -1,0 +1,12 @@
+{
+  "class_to_label": {
+    "0": "BALANCED",
+    "1": "UNSOLD",
+    "2": "SHORTAGE"
+  },
+  "label_to_class": {
+    "BALANCED": 0,
+    "UNSOLD": 1,
+    "SHORTAGE": 2
+  }
+}

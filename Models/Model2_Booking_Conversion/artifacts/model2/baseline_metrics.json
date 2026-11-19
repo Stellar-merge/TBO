@@ -1,0 +1,32 @@
+{
+  "global_rate": {
+    "name": "baseline_global_rate",
+    "roc_auc": 0.5,
+    "pr_auc": 0.17909856806882796,
+    "log_loss": 0.4719090208815738,
+    "brier_score": 0.14761443610918995,
+    "n_samples": 335910,
+    "base_rate": 0.17909856806882796,
+    "predicted_rate": 0.20343301124442997
+  },
+  "segment": {
+    "name": "baseline_segment",
+    "roc_auc": 0.6332021851716125,
+    "pr_auc": 0.25698791843550634,
+    "log_loss": 0.45289661966598915,
+    "brier_score": 0.14227953858682435,
+    "n_samples": 335910,
+    "base_rate": 0.17909856806882796
+  },
+  "logistic_regression": {
+    "name": "baseline_logistic_regression",
+    "roc_auc": 0.7195899364658997,
+    "pr_auc": 0.35056102826251273,
+    "log_loss": 0.42523391366116065,
+    "brier_score": 0.1336267340499355,
+    "n_samples": 335910,
+    "base_rate": 0.17909856806882796,
+    "n_features": 44
+  },
+  "timestamp": "2026-11-18T21:25:05.292371"
+}

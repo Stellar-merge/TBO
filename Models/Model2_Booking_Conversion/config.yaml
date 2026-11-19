@@ -1,0 +1,98 @@
+# Model 2 Configuration
+# All paths relative to project root: D:/Competition/Voyage_Hack/Model2_Booking_Conversion
+
+project:
+  name: "Model2_Booking_Conversion"
+  version: "1.0.0"
+  seed: 42
+
+paths:
+  root: "D:/Competition/Voyage_Hack/Model2_Booking_Conversion"
+  data:
+    raw_expedia: "D:/Competition/Voyage_Hack/Datasets/Datasets_Model2/expedia-hotel-recommendations"
+    raw_archive: "D:/Competition/Voyage_Hack/Datasets/Datasets_Model2/archive"
+    interim: "data/interim"
+    processed: "data/processed"
+  artifacts: "artifacts/model2"
+  reports: "reports"
+  docs: "docs"
+  logs: "logs"
+
+data:
+  expedia:
+    train_csv: "train.csv"
+    destinations_csv: "destinations.csv"
+    chunk_size: 500000
+    sample_frac: 0.15        # fraction for development; set 1.0 for final run
+    sample_frac_final: 1.0
+  archive:
+    hotel_bookings_csv: "hotel_bookings.csv"
+
+label:
+  group_cols:
+    - user_id
+    - srch_destination_id
+    - srch_ci
+    - srch_co
+    - srch_rm_cnt
+    - srch_adults_cnt
+    - srch_children_cnt
+  target: is_booking
+  event_level_fallback: false   # set true if grouping is degenerate
+
+splits:
+  train_frac: 0.60
+  val_frac: 0.15
+  cal_frac: 0.10
+  test_frac: 0.15
+  gap_days: 1
+
+features:
+  pca_components: 12          # for destinations.csv latent features
+  history_min_rows: 5         # minimum rows for user history features
+  freq_encode_cols:
+    - srch_destination_id
+    - hotel_market
+    - user_location_country
+    - user_location_region
+  drop_cols:
+    - hotel_cluster            # post-event
+    - cnt                      # post-event (number of events in group)
+    - user_id                  # raw ID - use freq encode instead
+
+model:
+  objective: "binary:logistic"
+  tree_method: "hist"
+  device: "cuda"              # changed to cpu if GPU fails
+  eval_metric: ["logloss", "aucpr"]
+  early_stopping_rounds: 50
+  num_boost_round: 1000
+  scale_pos_weight: 1         # unweighted first
+
+optuna:
+  n_trials: 40
+  timeout_seconds: 3600
+  direction: minimize
+  metric: val_logloss
+  search_space:
+    max_depth: [3, 10]
+    learning_rate: [0.01, 0.3]
+    min_child_weight: [1, 20]
+    subsample: [0.5, 1.0]
+    colsample_bytree: [0.5, 1.0]
+    reg_lambda: [0.1, 10.0]
+    reg_alpha: [0.0, 5.0]
+    gamma: [0.0, 2.0]
+
+calibration:
+  methods: ["isotonic", "sigmoid"]
+  cv_folds: 5
+
+evaluation:
+  bootstrap_samples: 200
+  thresholds: [0.05, 0.10, 0.15, 0.20, 0.30, 0.50]
+  deciles: 10
+
+shap:
+  max_rows: 50000
+  top_k: 10

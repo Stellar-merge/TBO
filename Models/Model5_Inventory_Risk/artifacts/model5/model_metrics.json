@@ -1,0 +1,539 @@
+{
+  "evaluation_timestamp": "2026-11-18T20:31:21.527152",
+  "baselines_validation": {
+    "dummy_most_frequent": {
+      "dataset_name": "Validation (Dummy Most-Frequent)",
+      "n_samples": 4896,
+      "accuracy": 0.3591,
+      "balanced_accuracy": 0.3333,
+      "macro_precision": 0.1197,
+      "macro_recall": 0.3333,
+      "macro_f1": 0.1761,
+      "weighted_f1": 0.1897,
+      "per_class": {
+        "BALANCED": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0
+        },
+        "UNSOLD": {
+          "precision": 0.3591,
+          "recall": 1.0,
+          "f1_score": 0.5284
+        },
+        "SHORTAGE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1_score": 0.0
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "BALANCED (0)",
+          "UNSOLD (1)",
+          "SHORTAGE (2)"
+        ],
+        "matrix": [
+          [
+            0,
+            1097,
+            0
+          ],
+          [
+            0,
+            1758,
+            0
+          ],
+          [
+            0,
+            2041,
+            0
+          ]
+        ]
+      },
+      "log_loss": 23.1015,
+      "brier_score": 1.28186,
+      "roc_auc_ovr_macro": 0.5
+    },
+    "dummy_stratified": {
+      "dataset_name": "Validation (Dummy Stratified)",
+      "n_samples": 4896,
+      "accuracy": 0.3697,
+      "balanced_accuracy": 0.3425,
+      "macro_precision": 0.3415,
+      "macro_recall": 0.3425,
+      "macro_f1": 0.3395,
+      "weighted_f1": 0.3639,
+      "per_class": {
+        "BALANCED": {
+          "precision": 0.2218,
+          "recall": 0.1686,
+          "f1_score": 0.1916
+        },
+        "UNSOLD": {
+          "precision": 0.3743,
+          "recall": 0.4522,
+          "f1_score": 0.4096
+        },
+        "SHORTAGE": {
+          "precision": 0.4283,
+          "recall": 0.4067,
+          "f1_score": 0.4172
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "BALANCED (0)",
+          "UNSOLD (1)",
+          "SHORTAGE (2)"
+        ],
+        "matrix": [
+          [
+            185,
+            476,
+            436
+          ],
+          [
+            291,
+            795,
+            672
+          ],
+          [
+            358,
+            853,
+            830
+          ]
+        ]
+      },
+      "log_loss": 22.7187,
+      "brier_score": 1.26062,
+      "roc_auc_ovr_macro": 0.5075
+    },
+    "rule_based": {
+      "dataset_name": "Validation (Rule-Based Heuristic)",
+      "n_samples": 4896,
+      "accuracy": 0.6475,
+      "balanced_accuracy": 0.6066,
+      "macro_precision": 0.6072,
+      "macro_recall": 0.6066,
+      "macro_f1": 0.6053,
+      "weighted_f1": 0.6482,
+      "per_class": {
+        "BALANCED": {
+          "precision": 0.3516,
+          "recall": 0.35,
+          "f1_score": 0.3508
+        },
+        "UNSOLD": {
+          "precision": 0.6712,
+          "recall": 0.756,
+          "f1_score": 0.7111
+        },
+        "SHORTAGE": {
+          "precision": 0.7988,
+          "recall": 0.7139,
+          "f1_score": 0.7539
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "BALANCED (0)",
+          "UNSOLD (1)",
+          "SHORTAGE (2)"
+        ],
+        "matrix": [
+          [
+            384,
+            454,
+            259
+          ],
+          [
+            321,
+            1329,
+            108
+          ],
+          [
+            387,
+            197,
+            1457
+          ]
+        ]
+      },
+      "log_loss": 12.7066,
+      "brier_score": 0.70507,
+      "roc_auc_ovr_macro": 0.7163
+    },
+    "decision_tree_depth_5": {
+      "dataset_name": "Validation (Decision Tree Depth=5)",
+      "n_samples": 4896,
+      "accuracy": 0.9148,
+      "balanced_accuracy": 0.8951,
+      "macro_precision": 0.9014,
+      "macro_recall": 0.8951,
+      "macro_f1": 0.8979,
+      "weighted_f1": 0.9138,
+      "per_class": {
+        "BALANCED": {
+          "precision": 0.8314,
+          "recall": 0.7776,
+          "f1_score": 0.8036
+        },
+        "UNSOLD": {
+          "precision": 0.93,
+          "recall": 0.9448,
+          "f1_score": 0.9374
+        },
+        "SHORTAGE": {
+          "precision": 0.9429,
+          "recall": 0.9628,
+          "f1_score": 0.9527
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "BALANCED (0)",
+          "UNSOLD (1)",
+          "SHORTAGE (2)"
+        ],
+        "matrix": [
+          [
+            853,
+            125,
+            119
+          ],
+          [
+            97,
+            1661,
+            0
+          ],
+          [
+            76,
+            0,
+            1965
+          ]
+        ]
+      },
+      "log_loss": 0.3614,
+      "brier_score": 0.12417,
+      "roc_auc_ovr_macro": 0.979
+    }
+  },
+  "four_model_comparison": {
+    "config_1_baseline_rf": {
+      "name": "Baseline Random Forest (Original Features)",
+      "accuracy": 0.8571,
+      "balanced_accuracy": 0.8052,
+      "macro_f1": 0.8119,
+      "weighted_f1": 0.8466,
+      "brier_score": 0.25774
+    },
+    "config_2_rf_feature_engineering": {
+      "name": "Random Forest with Feature Engineering (un-tuned)",
+      "accuracy": 0.9237,
+      "balanced_accuracy": 0.9066,
+      "macro_f1": 0.9079,
+      "weighted_f1": 0.9235,
+      "brier_score": 0.11193
+    },
+    "config_3_tuned_rf": {
+      "name": "Tuned Random Forest (Optimized Hyperparameters)",
+      "accuracy": 0.9213,
+      "balanced_accuracy": 0.9147,
+      "macro_f1": 0.9085,
+      "weighted_f1": 0.9229,
+      "brier_score": 0.11486,
+      "best_config": {
+        "n_estimators": 200,
+        "max_depth": 18,
+        "min_samples_split": 4,
+        "min_samples_leaf": 2,
+        "max_features": "sqrt",
+        "class_weight": "balanced"
+      }
+    },
+    "config_4_final_selected_calibrated_rf": {
+      "name": "Final Selected Random Forest (Tuned + Isotonic Calibration)",
+      "accuracy": 0.9234,
+      "balanced_accuracy": 0.9074,
+      "macro_f1": 0.9078,
+      "weighted_f1": 0.9233,
+      "brier_score": 0.11222
+    }
+  },
+  "random_forest_train": {
+    "dataset_name": "Train Split (2015-08-01 to 2016-07-31)",
+    "n_samples": 10904,
+    "accuracy": 0.9877,
+    "balanced_accuracy": 0.9901,
+    "macro_precision": 0.9782,
+    "macro_recall": 0.9901,
+    "macro_f1": 0.9838,
+    "weighted_f1": 0.9879,
+    "per_class": {
+      "BALANCED": {
+        "precision": 0.9347,
+        "recall": 1.0,
+        "f1_score": 0.9662
+      },
+      "UNSOLD": {
+        "precision": 1.0,
+        "recall": 0.9844,
+        "f1_score": 0.9921
+      },
+      "SHORTAGE": {
+        "precision": 1.0,
+        "recall": 0.9859,
+        "f1_score": 0.9929
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "BALANCED (0)",
+        "UNSOLD (1)",
+        "SHORTAGE (2)"
+      ],
+      "matrix": [
+        [
+          1918,
+          0,
+          0
+        ],
+        [
+          73,
+          4599,
+          0
+        ],
+        [
+          61,
+          0,
+          4253
+        ]
+      ]
+    },
+    "log_loss": 0.0551,
+    "brier_score": 0.02548,
+    "roc_auc_ovr_macro": 1.0
+  },
+  "random_forest_validation_uncalibrated": {
+    "dataset_name": "Validation Split (2016-08-01 to 2016-12-31)",
+    "n_samples": 4896,
+    "accuracy": 0.9189,
+    "balanced_accuracy": 0.9144,
+    "macro_precision": 0.9038,
+    "macro_recall": 0.9144,
+    "macro_f1": 0.9077,
+    "weighted_f1": 0.9207,
+    "per_class": {
+      "BALANCED": {
+        "precision": 0.7818,
+        "recall": 0.8851,
+        "f1_score": 0.8303
+      },
+      "UNSOLD": {
+        "precision": 0.9513,
+        "recall": 0.9329,
+        "f1_score": 0.942
+      },
+      "SHORTAGE": {
+        "precision": 0.9782,
+        "recall": 0.925,
+        "f1_score": 0.9509
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "BALANCED (0)",
+        "UNSOLD (1)",
+        "SHORTAGE (2)"
+      ],
+      "matrix": [
+        [
+          971,
+          84,
+          42
+        ],
+        [
+          118,
+          1640,
+          0
+        ],
+        [
+          153,
+          0,
+          1888
+        ]
+      ]
+    },
+    "log_loss": 0.1929,
+    "brier_score": 0.11549,
+    "roc_auc_ovr_macro": 0.9863
+  },
+  "random_forest_validation_calibrated": {
+    "dataset_name": "Validation (Calibrated Isotonic)",
+    "n_samples": 4896,
+    "accuracy": 0.9232,
+    "balanced_accuracy": 0.9108,
+    "macro_precision": 0.9091,
+    "macro_recall": 0.9108,
+    "macro_f1": 0.9099,
+    "weighted_f1": 0.9234,
+    "per_class": {
+      "BALANCED": {
+        "precision": 0.8245,
+        "recall": 0.835,
+        "f1_score": 0.8297
+      },
+      "UNSOLD": {
+        "precision": 0.9381,
+        "recall": 0.9482,
+        "f1_score": 0.9431
+      },
+      "SHORTAGE": {
+        "precision": 0.9646,
+        "recall": 0.949,
+        "f1_score": 0.9568
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "BALANCED (0)",
+        "UNSOLD (1)",
+        "SHORTAGE (2)"
+      ],
+      "matrix": [
+        [
+          916,
+          110,
+          71
+        ],
+        [
+          91,
+          1667,
+          0
+        ],
+        [
+          104,
+          0,
+          1937
+        ]
+      ]
+    },
+    "log_loss": 0.1783,
+    "brier_score": 0.10987,
+    "roc_auc_ovr_macro": 0.9871
+  },
+  "random_forest_test_uncalibrated": {
+    "dataset_name": "Config 3: Tuned Random Forest (Uncalibrated)",
+    "n_samples": 7776,
+    "accuracy": 0.9213,
+    "balanced_accuracy": 0.9147,
+    "macro_precision": 0.9046,
+    "macro_recall": 0.9147,
+    "macro_f1": 0.9085,
+    "weighted_f1": 0.9229,
+    "per_class": {
+      "BALANCED": {
+        "precision": 0.7812,
+        "recall": 0.8803,
+        "f1_score": 0.8278
+      },
+      "UNSOLD": {
+        "precision": 0.964,
+        "recall": 0.9372,
+        "f1_score": 0.9504
+      },
+      "SHORTAGE": {
+        "precision": 0.9686,
+        "recall": 0.9267,
+        "f1_score": 0.9472
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "BALANCED (0)",
+        "UNSOLD (1)",
+        "SHORTAGE (2)"
+      ],
+      "matrix": [
+        [
+          1471,
+          119,
+          81
+        ],
+        [
+          214,
+          3191,
+          0
+        ],
+        [
+          198,
+          0,
+          2502
+        ]
+      ]
+    },
+    "log_loss": 0.1951,
+    "brier_score": 0.11486,
+    "roc_auc_ovr_macro": 0.9862
+  },
+  "random_forest_test_calibrated": {
+    "dataset_name": "Config 4: Final Selected RF (Tuned + Calibrated)",
+    "n_samples": 7776,
+    "accuracy": 0.9234,
+    "balanced_accuracy": 0.9074,
+    "macro_precision": 0.9082,
+    "macro_recall": 0.9074,
+    "macro_f1": 0.9078,
+    "weighted_f1": 0.9233,
+    "per_class": {
+      "BALANCED": {
+        "precision": 0.8224,
+        "recall": 0.8205,
+        "f1_score": 0.8214
+      },
+      "UNSOLD": {
+        "precision": 0.9496,
+        "recall": 0.9565,
+        "f1_score": 0.953
+      },
+      "SHORTAGE": {
+        "precision": 0.9526,
+        "recall": 0.9452,
+        "f1_score": 0.9489
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "BALANCED (0)",
+        "UNSOLD (1)",
+        "SHORTAGE (2)"
+      ],
+      "matrix": [
+        [
+          1371,
+          173,
+          127
+        ],
+        [
+          148,
+          3257,
+          0
+        ],
+        [
+          148,
+          0,
+          2552
+        ]
+      ]
+    },
+    "log_loss": 0.2488,
+    "brier_score": 0.11222,
+    "roc_auc_ovr_macro": 0.9856
+  },
+  "calibration_diagnostics": {
+    "calibration_method": "isotonic",
+    "brier_score_raw": 0.11549,
+    "brier_score_calibrated": 0.10987,
+    "brier_improvement": 0.00562
+  }
+}

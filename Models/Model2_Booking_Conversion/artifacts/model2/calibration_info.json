@@ -1,0 +1,15 @@
+{
+  "chosen_method": "isotonic",
+  "cv_logloss_isotonic": 0.41338366866111753,
+  "cv_logloss_platt": 0.4178574919700623,
+  "cal_metrics": {
+    "logloss": 0.41277506947517395,
+    "brier_score": 0.1303577870130539,
+    "ece": 1.8524760544062542e-07
+  },
+  "raw_metrics": {
+    "logloss": 0.4143192768096924,
+    "brier_score": 0.1308748871088028,
+    "ece": 0.0167991416190889
+  }
+}

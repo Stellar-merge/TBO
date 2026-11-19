@@ -1,0 +1,99 @@
+{
+  "dataset_name": "Model 5 Inventory Risk Master Dataset",
+  "total_records": 23576,
+  "target_variable": "risk_class",
+  "target_label": "risk_label",
+  "target_classes": {
+    "0": "BALANCED",
+    "1": "UNSOLD",
+    "2": "SHORTAGE"
+  },
+  "target_distribution": {
+    "UNSOLD": 9835,
+    "SHORTAGE": 9055,
+    "BALANCED": 4686
+  },
+  "n_predictive_features": 38,
+  "predictive_features": [
+    "property_id",
+    "destination_id",
+    "destination_type",
+    "supplier_id",
+    "historical_daily_demand_30d_avg",
+    "historical_daily_demand_90d_avg",
+    "historical_same_month_prior_year_demand",
+    "current_pace_on_the_books",
+    "pace_vs_historical_ratio",
+    "search_inquiry_index",
+    "market_segment_ta_to_pct",
+    "market_segment_direct_pct",
+    "procured_quantity",
+    "supplier_capacity",
+    "procurement_to_capacity_ratio",
+    "supplier_reliability_score",
+    "supplier_release_days",
+    "contract_flexibility",
+    "procurement_lead_time_days",
+    "stay_nights",
+    "historical_cancellation_rate_30d",
+    "cancellation_adjusted_expected_demand",
+    "procurement_cost_per_room",
+    "expected_selling_price",
+    "expected_gross_margin_usd",
+    "expected_gross_margin_pct",
+    "trailing_30d_adr",
+    "price_premium_vs_market",
+    "checkin_year",
+    "checkin_month",
+    "checkin_day_of_week",
+    "is_weekend",
+    "is_high_season",
+    "quarter",
+    "model1_demand_forecast",
+    "model2_conversion_prob_est",
+    "model3_cancellation_risk_est",
+    "model4_price_momentum_est"
+  ],
+  "n_outcome_audit_fields": 11,
+  "outcome_audit_fields": [
+    "outcome_realized_net_demand",
+    "outcome_realized_cancellations",
+    "outcome_unconstrained_latent_demand",
+    "outcome_actual_rooms_sold",
+    "outcome_unsold_rooms",
+    "outcome_shortage_rooms",
+    "outcome_inventory_coverage_ratio",
+    "outcome_realized_revenue_usd",
+    "outcome_total_procurement_cost_usd",
+    "outcome_realized_gross_profit_usd",
+    "outcome_realized_utilization_pct"
+  ],
+  "splits": {
+    "train": {
+      "n_rows": 10904,
+      "date_range": [
+        "2015-07-31",
+        "2016-07-31"
+      ]
+    },
+    "validation": {
+      "n_rows": 4896,
+      "date_range": [
+        "2016-08-01",
+        "2016-12-31"
+      ]
+    },
+    "test": {
+      "n_rows": 7776,
+      "date_range": [
+        "2017-01-01",
+        "2017-08-31"
+      ]
+    }
+  },
+  "leakage_safeguards": [
+    "All predictive features computed strictly on data prior to decision_timestamp",
+    "Outcome audit fields isolated with 'outcome_' prefix and strictly excluded from model feature matrix",
+    "Chronological time-block splits prevent temporal lookahead"
+  ]
+}

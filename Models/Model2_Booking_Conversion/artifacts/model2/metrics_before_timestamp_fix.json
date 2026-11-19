@@ -1,0 +1,596 @@
+{
+  "timestamp": "2026-11-18T18:38:56.901465",
+  "note": "PUBLIC CONSUMER DATA \u2014 NOT TBO B2B DATA",
+  "core": {
+    "roc_auc": 0.7536474369613886,
+    "pr_auc": 0.4084170328225229,
+    "log_loss": 0.4046441614627838,
+    "brier_score": 0.12687161564826965,
+    "ece": 0.011481665450860087,
+    "n_test": 335681,
+    "base_rate": 0.17777592416609816,
+    "shuffled_label_auc": 0.5000891083536999,
+    "leakage_flag": false
+  },
+  "bootstrap_ci": {
+    "roc_auc_ci95": [
+      0.7519900693888579,
+      0.7556541325397048
+    ],
+    "pr_auc_ci95": [
+      0.40483684580495155,
+      0.4122630368660601
+    ],
+    "logloss_ci95": [
+      0.4027894653379917,
+      0.4062949322164059
+    ],
+    "brier_ci95": [
+      0.12613334693014622,
+      0.12748609893023968
+    ]
+  },
+  "thresholds": {
+    "thr_0.05": {
+      "precision": 0.2031459111844964,
+      "recall": 0.9792881560426302,
+      "n_flagged": 287675
+    },
+    "thr_0.1": {
+      "precision": 0.23683788782480258,
+      "recall": 0.9162644949393391,
+      "n_flagged": 230871
+    },
+    "thr_0.15": {
+      "precision": 0.27199742917772474,
+      "recall": 0.8226422682485421,
+      "n_flagged": 180487
+    },
+    "thr_0.2": {
+      "precision": 0.3203064406350412,
+      "recall": 0.6781955895167237,
+      "n_flagged": 126354
+    },
+    "thr_0.3": {
+      "precision": 0.42174079354591926,
+      "recall": 0.4064615590857296,
+      "n_flagged": 57514
+    },
+    "thr_0.5": {
+      "precision": 0.5817696254128891,
+      "recall": 0.13871573161740064,
+      "n_flagged": 14229
+    }
+  },
+  "aggregate_check": {
+    "n_destination_month_groups": 4982,
+    "mae": 2.0426123706479595,
+    "mape": 0.451436550272928,
+    "bias": 0.6698839911530771
+  },
+  "per_1000_searches": {
+    "expected_bookings_per_1000": 189.17050170898438,
+    "actual_bookings_per_1000": 177.77592416609818
+  },
+  "segment_performance": {
+    "is_mobile": {
+      "0": {
+        "n": 283536,
+        "base_rate": 0.18320072230686757,
+        "roc_auc": 0.7511837235801153,
+        "logloss": 0.412620484828949,
+        "avg_pred": 0.19480657577514648
+      },
+      "1": {
+        "n": 52145,
+        "base_rate": 0.14827883785597853,
+        "roc_auc": 0.7635883666794103,
+        "logloss": 0.3612731695175171,
+        "avg_pred": 0.15852460265159607
+      }
+    },
+    "lead_time_bucket": {
+      "0": {
+        "n": 71105,
+        "base_rate": 0.29177976232332464,
+        "roc_auc": 0.7141258476999292,
+        "logloss": 0.540059506893158,
+        "avg_pred": 0.2950344681739807
+      },
+      "3": {
+        "n": 66890,
+        "base_rate": 0.1227238750186874,
+        "roc_auc": 0.7363001612109455,
+        "logloss": 0.3338417708873749,
+        "avg_pred": 0.1429770588874817
+      },
+      "1": {
+        "n": 65357,
+        "base_rate": 0.20848570160809093,
+        "roc_auc": 0.7218673268420709,
+        "logloss": 0.4573766589164734,
+        "avg_pred": 0.21350888907909393
+      },
+      "2": {
+        "n": 65965,
+        "base_rate": 0.16258621996513303,
+        "roc_auc": 0.7205423563884824,
+        "logloss": 0.40001380443573,
+        "avg_pred": 0.1741512417793274
+      },
+      "4": {
+        "n": 66364,
+        "base_rate": 0.0959707070098246,
+        "roc_auc": 0.7419659938951055,
+        "logloss": 0.28358861804008484,
+        "avg_pred": 0.1132630929350853
+      }
+    },
+    "num_adults": {
+      "1": {
+        "n": 70789,
+        "base_rate": 0.25899504160250886,
+        "roc_auc": 0.7556958003669236,
+        "logloss": 0.48861825466156006,
+        "avg_pred": 0.2651119530200958
+      },
+      "2": {
+        "n": 221047,
+        "base_rate": 0.1569620940343004,
+        "roc_auc": 0.7445238368922436,
+        "logloss": 0.3822009563446045,
+        "avg_pred": 0.16978128254413605
+      },
+      "3": {
+        "n": 17277,
+        "base_rate": 0.15569832725588933,
+        "roc_auc": 0.7185139770274648,
+        "logloss": 0.3915354311466217,
+        "avg_pred": 0.17456640303134918
+      },
+      "4": {
+        "n": 18486,
+        "base_rate": 0.157795088174835,
+        "roc_auc": 0.729809846236598,
+        "logloss": 0.38973572850227356,
+        "avg_pred": 0.16666622459888458
+      },
+      "6": {
+        "n": 3559,
+        "base_rate": 0.13009272267490868,
+        "roc_auc": 0.7502410272294494,
+        "logloss": 0.3418147563934326,
+        "avg_pred": 0.13302166759967804
+      },
+      "7": {
+        "n": 480,
+        "base_rate": 0.1375,
+        "roc_auc": 0.672888303323086,
+        "logloss": 0.37903112173080444,
+        "avg_pred": 0.1565033495426178
+      },
+      "8": {
+        "n": 960,
+        "base_rate": 0.146875,
+        "roc_auc": 0.7246728842473524,
+        "logloss": 0.3785499632358551,
+        "avg_pred": 0.15637902915477753
+      },
+      "5": {
+        "n": 2897,
+        "base_rate": 0.12046945115636866,
+        "roc_auc": 0.7158938073796853,
+        "logloss": 0.3356309235095978,
+        "avg_pred": 0.13307678699493408
+      },
+      "9": {
+        "n": 186,
+        "base_rate": 0.10752688172043011,
+        "roc_auc": 0.7718373493975904,
+        "logloss": 0.2945612072944641,
+        "avg_pred": 0.124295674264431
+      }
+    },
+    "is_package": {
+      "0": {
+        "n": 239765,
+        "base_rate": 0.22262215085604656,
+        "roc_auc": 0.7148209784534918,
+        "logloss": 0.4765939712524414,
+        "avg_pred": 0.22632794082164764
+      },
+      "1": {
+        "n": 95916,
+        "base_rate": 0.06567204637391051,
+        "roc_auc": 0.7361622390086017,
+        "logloss": 0.22478841245174408,
+        "avg_pred": 0.09628654271364212
+      }
+    }
+  },
+  "baseline_comparison": {
+    "xgb_calibrated": {
+      "roc_auc": 0.7536474369613886,
+      "pr_auc": 0.4084170328225229,
+      "log_loss": 0.4046441614627838,
+      "brier_score": 0.12687161564826965
+    },
+    "global_rate": {
+      "roc_auc": 0.5,
+      "pr_auc": 0.17909856806882796,
+      "log_loss": 0.4719090208815738,
+      "brier_score": 0.14761443610918995
+    },
+    "segment": {
+      "roc_auc": 0.6332021851716125,
+      "pr_auc": 0.25698791843550634,
+      "log_loss": 0.45289661966598915,
+      "brier_score": 0.14227953858682435
+    },
+    "logistic_regression": {
+      "roc_auc": 0.7202247999264342,
+      "pr_auc": 0.35297274764174424,
+      "log_loss": 0.4247607789192058,
+      "brier_score": 0.13338998485939138
+    }
+  },
+  "lift_table": [
+    {
+      "decile": 1,
+      "n": 33565,
+      "actual_bookings": 16316,
+      "avg_pred": 0.5029690265655518,
+      "actual_rate": 0.48610159392224045,
+      "lift": 2.734349975692265,
+      "cumul_actual": 16316,
+      "cumul_pct": 0.27340974596152556
+    },
+    {
+      "decile": 2,
+      "n": 26174,
+      "actual_bookings": 8599,
+      "avg_pred": 0.34324967861175537,
+      "actual_rate": 0.32853213112248797,
+      "lift": 1.848012505987799,
+      "cumul_actual": 24915,
+      "cumul_pct": 0.4175045244319324
+    },
+    {
+      "decile": 3,
+      "n": 39321,
+      "actual_bookings": 9978,
+      "avg_pred": 0.2677374482154846,
+      "actual_rate": 0.2537575341420615,
+      "lift": 1.427401012439529,
+      "cumul_actual": 34893,
+      "cumul_pct": 0.5847074200683692
+    },
+    {
+      "decile": 4,
+      "n": 34928,
+      "actual_bookings": 6987,
+      "avg_pred": 0.20948123931884766,
+      "actual_rate": 0.2000400824553367,
+      "lift": 1.1252371961708203,
+      "cumul_actual": 41880,
+      "cumul_pct": 0.7017896641866077
+    },
+    {
+      "decile": 5,
+      "n": 28913,
+      "actual_bookings": 4658,
+      "avg_pred": 0.1770724505186081,
+      "actual_rate": 0.16110400166015287,
+      "lift": 0.9062194580950764,
+      "cumul_actual": 46538,
+      "cumul_pct": 0.7798444935987666
+    },
+    {
+      "decile": 6,
+      "n": 36553,
+      "actual_bookings": 4914,
+      "avg_pred": 0.14821529388427734,
+      "actual_rate": 0.13443493010149646,
+      "lift": 0.7562043664354252,
+      "cumul_actual": 51452,
+      "cumul_pct": 0.8621891547690864
+    },
+    {
+      "decile": 7,
+      "n": 34371,
+      "actual_bookings": 3487,
+      "avg_pred": 0.11326587200164795,
+      "actual_rate": 0.10145180530098048,
+      "lift": 0.5706723549708163,
+      "cumul_actual": 54939,
+      "cumul_pct": 0.9206213553187211
+    },
+    {
+      "decile": 8,
+      "n": 29676,
+      "actual_bookings": 2243,
+      "avg_pred": 0.08326169103384018,
+      "actual_rate": 0.07558296266343173,
+      "lift": 0.42515859792585675,
+      "cumul_actual": 57182,
+      "cumul_pct": 0.9582076546685435
+    },
+    {
+      "decile": 9,
+      "n": 34182,
+      "actual_bookings": 1685,
+      "avg_pred": 0.05644626542925835,
+      "actual_rate": 0.04929495055877362,
+      "lift": 0.2772869880440996,
+      "cumul_actual": 58867,
+      "cumul_pct": 0.9864434613579999
+    },
+    {
+      "decile": 10,
+      "n": 37998,
+      "actual_bookings": 809,
+      "avg_pred": 0.025246398523449898,
+      "actual_rate": 0.0212905942418022,
+      "lift": 0.11976084130441726,
+      "cumul_actual": 59676,
+      "cumul_pct": 1.0
+    }
+  ],
+  "leakage_checks": {
+    "shuffled_label_auc": 0.5000891083536999,
+    "leakage_flag": false
+  },
+  "block_metrics_all": {
+    "train": {
+      "n_samples": 1365565,
+      "base_rate": 0.20343301124442997,
+      "roc_auc": 0.7894311154946057,
+      "pr_auc": 0.4991537431671724,
+      "log_loss": 0.41379255056381226,
+      "brier_score": 0.13216263055801392
+    },
+    "val": {
+      "n_samples": 335910,
+      "base_rate": 0.17909856806882796,
+      "roc_auc": 0.7542324331419611,
+      "pr_auc": 0.4101478925801296,
+      "log_loss": 0.4051983654499054,
+      "brier_score": 0.12736690044403076
+    },
+    "cal": {
+      "n_samples": 223149,
+      "base_rate": 0.18559348238172702,
+      "roc_auc": 0.7545882588259878,
+      "pr_auc": 0.4215198004680996,
+      "log_loss": 0.41265758872032166,
+      "brier_score": 0.13030774891376495
+    },
+    "test": {
+      "n_samples": 335681,
+      "base_rate": 0.17777592416609816,
+      "roc_auc": 0.7536474369613886,
+      "pr_auc": 0.4084170328225229,
+      "log_loss": 0.4046441614627838,
+      "brier_score": 0.12687161564826965
+    }
+  },
+  "classification_metrics_detailed": {
+    "val_optimal_threshold": 0.20999999999999996,
+    "at_threshold_0_50": {
+      "train": {
+        "threshold": 0.5,
+        "always_predict_no_booking_accuracy": 0.7965669887555701,
+        "accuracy": 0.814596888467411,
+        "balanced_accuracy": 0.5763272378471787,
+        "precision": 0.6700462739139443,
+        "recall": 0.17461420225269167,
+        "f1": 0.2770334327062559
+      },
+      "val": {
+        "threshold": 0.5,
+        "always_predict_no_booking_accuracy": 0.820901431931172,
+        "accuracy": 0.8285135899496889,
+        "balanced_accuracy": 0.5530579854616744,
+        "precision": 0.6035474204260144,
+        "recall": 0.12386762188128522,
+        "f1": 0.2055497324433166
+      },
+      "test": {
+        "threshold": 0.5,
+        "always_predict_no_booking_accuracy": 0.8222240758339018,
+        "accuracy": 0.8291562525135471,
+        "balanced_accuracy": 0.5585772640080083,
+        "precision": 0.5817696254128891,
+        "recall": 0.13871573161740064,
+        "f1": 0.2240173195318314
+      }
+    },
+    "at_val_optimal_threshold": {
+      "train": {
+        "threshold": 0.20999999999999996,
+        "always_predict_no_booking_accuracy": 0.7965669887555701,
+        "accuracy": 0.7335198251273283,
+        "balanced_accuracy": 0.7110695606610468,
+        "precision": 0.40644634098105564,
+        "recall": 0.6732193188649429,
+        "f1": 0.5068745612775057
+      },
+      "val": {
+        "threshold": 0.20999999999999996,
+        "always_predict_no_booking_accuracy": 0.820901431931172,
+        "accuracy": 0.7243041290821947,
+        "balanced_accuracy": 0.6785281116359964,
+        "precision": 0.34622966978807296,
+        "recall": 0.607204002593042,
+        "f1": 0.44099982495216367
+      },
+      "test": {
+        "threshold": 0.20999999999999996,
+        "always_predict_no_booking_accuracy": 0.8222240758339018,
+        "accuracy": 0.7027505280310771,
+        "balanced_accuracy": 0.6820227885497357,
+        "precision": 0.32958263574324154,
+        "recall": 0.6498592398954354,
+        "f1": 0.43735585842125146
+      }
+    }
+  },
+  "test_baselines_recomputed": {
+    "global_rate": {
+      "n_samples": 335681,
+      "base_rate": 0.17777592416609816,
+      "roc_auc": 0.5,
+      "pr_auc": 0.17777592416609816,
+      "log_loss": 0.47010364573189994,
+      "brier_score": 0.14682993107033296
+    },
+    "segment": {
+      "n_samples": 335681,
+      "base_rate": 0.17777592416609816,
+      "roc_auc": 0.6309683678129053,
+      "pr_auc": 0.2535109323704867,
+      "log_loss": 0.4517175888083615,
+      "brier_score": 0.14175281599353576
+    },
+    "logistic_regression": {
+      "n_samples": 335681,
+      "base_rate": 0.17777592416609816,
+      "roc_auc": 0.7234478341641022,
+      "pr_auc": 0.35244525398929344,
+      "log_loss": 0.42165715820057176,
+      "brier_score": 0.13236817855558664
+    },
+    "xgb_calibrated": {
+      "n_samples": 335681,
+      "base_rate": 0.17777592416609816,
+      "roc_auc": 0.7536474369613886,
+      "pr_auc": 0.4084170328225229,
+      "log_loss": 0.4046441614627838,
+      "brier_score": 0.12687161564826965
+    }
+  },
+  "overprediction_analysis": {
+    "explanation": "Over-prediction (189.2 expected vs 177.8 actual per 1,000) is caused by chronological base rate drift. Calibration occurred on the cal block (Sep-Oct 2014, base rate 18.56%), whereas the test block (Nov-Dec 2014) experienced a seasonal drop in consumer booking conversion to 17.78% (reaching 16.9% in December). Unweighted MAPE is distorted by groups with 1-2 actual bookings (where 1 extra predicted booking yields 100% error); when volume-weighted (WMAPE), aggregate error drops significantly.",
+    "base_rate_by_block": {
+      "train": 0.20343301124442997,
+      "val": 0.17909856806882796,
+      "cal": 0.18559348238172702,
+      "test": 0.17777592416609816
+    },
+    "test_month_breakdown": {
+      "2014-10": {
+        "n_searches": 18775,
+        "actual_base_rate": 0.19019973368841545,
+        "expected_booking_rate": 0.19316013157367706,
+        "rate_bias": 0.0029603978852616175,
+        "expected_per_1000": 193.16012573242188,
+        "actual_per_1000": 190.19973368841545,
+        "bias_per_1000": 2.9603978852616173
+      },
+      "2014-11": {
+        "n_searches": 149735,
+        "actual_base_rate": 0.18692356496477108,
+        "expected_booking_rate": 0.19150345027446747,
+        "rate_bias": 0.004579885309696385,
+        "expected_per_1000": 191.50344848632812,
+        "actual_per_1000": 186.9235649647711,
+        "bias_per_1000": 4.579885309696385
+      },
+      "2014-12": {
+        "n_searches": 167171,
+        "actual_base_rate": 0.1681870659384702,
+        "expected_booking_rate": 0.18663279712200165,
+        "rate_bias": 0.01844573118353146,
+        "expected_per_1000": 186.63279724121094,
+        "actual_per_1000": 168.1870659384702,
+        "bias_per_1000": 18.44573118353146
+      }
+    },
+    "aggregate_by_volume_threshold": {
+      "min_searches_1": {
+        "min_searches": 1,
+        "n_groups": 39431,
+        "n_searches_covered": 335681,
+        "coverage_pct": 1.0,
+        "mae": 0.636267442712299,
+        "bias": 0.09700339694291672,
+        "mape_unweighted": 0.4909917096185035,
+        "wmape_volume_weighted": 0.42041459772083684,
+        "total_volume_relative_error": 0.0640950717206247
+      },
+      "min_searches_10": {
+        "min_searches": 10,
+        "n_groups": 4982,
+        "n_searches_covered": 256118,
+        "coverage_pct": 0.7629803295390565,
+        "mae": 2.0426123618334833,
+        "bias": 0.6698839657804254,
+        "mape_unweighted": 0.4514365486327822,
+        "wmape_volume_weighted": 0.23764729424007877,
+        "total_volume_relative_error": 0.07793753721888792
+      },
+      "min_searches_30": {
+        "min_searches": 30,
+        "n_groups": 1780,
+        "n_searches_covered": 204277,
+        "coverage_pct": 0.608545017442155,
+        "mae": 3.4153539127513266,
+        "bias": 1.5282349663169197,
+        "mape_unweighted": 0.4204200079701678,
+        "wmape_volume_weighted": 0.18705055120449712,
+        "total_volume_relative_error": 0.08369766507184394
+      },
+      "min_searches_50": {
+        "min_searches": 50,
+        "n_groups": 1041,
+        "n_searches_covered": 176342,
+        "coverage_pct": 0.5253261280799331,
+        "mae": 4.4278643904227,
+        "bias": 2.109980123645405,
+        "mape_unweighted": 0.37908280707819003,
+        "wmape_volume_weighted": 0.16857105143468515,
+        "total_volume_relative_error": 0.08032797985846987
+      },
+      "min_searches_100": {
+        "min_searches": 100,
+        "n_groups": 491,
+        "n_searches_covered": 137444,
+        "coverage_pct": 0.4094482559334606,
+        "mae": 6.364551832136943,
+        "bias": 3.4419977868890084,
+        "mape_unweighted": 0.3326531959089451,
+        "wmape_volume_weighted": 0.15126554768281325,
+        "total_volume_relative_error": 0.08180558034633816
+      }
+    }
+  },
+  "ablation_user_prior": {
+    "shuffled_label_auc": 0.4995125420293564,
+    "ablation_excluded_features": [
+      "user_prior_intents",
+      "user_prior_booking_rate"
+    ],
+    "model_without_user_prior": {
+      "n_samples": 335681,
+      "base_rate": 0.17777592416609816,
+      "roc_auc": 0.7455146765256309,
+      "pr_auc": 0.38015965681541647,
+      "log_loss": 0.4100140333175659,
+      "brier_score": 0.1290239542722702
+    },
+    "model_with_user_prior": {
+      "n_samples": 335681,
+      "base_rate": 0.17777592416609816,
+      "roc_auc": 0.7536474369613886,
+      "pr_auc": 0.4084170328225229,
+      "log_loss": 0.4046441614627838,
+      "brier_score": 0.12687161564826965
+    },
+    "delta": {
+      "roc_auc_lift": 0.008132760435757724,
+      "pr_auc_lift": 0.028257376007106427,
+      "log_loss_reduction": 0.0053698718547821045
+    }
+  },
+  "updated_at": "2026-11-18T18:58:09.463893"
+}

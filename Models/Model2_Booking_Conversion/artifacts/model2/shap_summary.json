@@ -1,0 +1,16 @@
+{
+  "top_features": {
+    "user_prior_booking_rate": 0.409220427274704,
+    "length_of_stay_nights": 0.3254985809326172,
+    "user_prior_intents": 0.20657621324062347,
+    "is_package": 0.17081443965435028,
+    "lead_time_days": 0.1400081068277359,
+    "dest_pca_1": 0.12150296568870544,
+    "adults_per_room": 0.11771619319915771,
+    "orig_destination_distance": 0.06532897800207138,
+    "dest_pca_2": 0.06180134415626526,
+    "channel": 0.06167649105191231
+  },
+  "n_rows_analyzed": 50000,
+  "n_features": 44
+}

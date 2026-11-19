@@ -1,0 +1,69 @@
+# ==============================================================================
+# Model 5 Configuration: Inventory Risk Prediction
+# System: TBO SmartStock AI
+# Algorithm: Random Forest Classifier
+# ==============================================================================
+
+project:
+  name: "Model 5 - Inventory Risk Prediction"
+  module: "model5"
+  version: "1.0.0"
+  description: "Predicts procurement risk (UNSOLD, SHORTAGE, BALANCED) for hotel inventory procurement opportunities."
+  algorithm: "Random Forest Classifier"
+  random_seed: 42
+
+paths:
+  # Base directory paths (relative to Model5_Inventory_Risk project root)
+  project_root: "."
+  datasets_root: "../Datasets/Datasets_Model5"
+  
+  # Dataset subdirectories (inside datasets_root)
+  raw_dir: "../Datasets/Datasets_Model5/raw"
+  interim_dir: "../Datasets/Datasets_Model5/interim"
+  processed_dir: "../Datasets/Datasets_Model5/processed"
+  
+  # Specific dataset files
+  raw_hotels_csv: "../Datasets/Datasets_Model5/raw/historical_bookings/hotels.csv"
+  interim_cleaned_bookings: "../Datasets/Datasets_Model5/interim/cleaned_data/hotel_bookings_cleaned.parquet"
+  interim_daily_demand: "../Datasets/Datasets_Model5/interim/aggregated_data/daily_demand_pace.parquet"
+  master_dataset_parquet: "../Datasets/Datasets_Model5/processed/final_dataset/model5_inventory_risk_dataset.parquet"
+  master_dataset_csv_sample: "../Datasets/Datasets_Model5/processed/final_dataset/model5_inventory_risk_dataset.csv"
+  train_dataset_parquet: "../Datasets/Datasets_Model5/processed/train/model5_train.parquet"
+  val_dataset_parquet: "../Datasets/Datasets_Model5/processed/validation/model5_validation.parquet"
+  test_dataset_parquet: "../Datasets/Datasets_Model5/processed/test/model5_test.parquet"
+
+  # Project internal directories (inside Model5_Inventory_Risk)
+  src_dir: "src"
+  scripts_dir: "scripts"
+  docs_dir: "docs"
+  reports_dir: "docs/reports"
+  metadata_dir: "metadata"
+  artifacts_dir: "artifacts"
+  logs_dir: "logs"
+  tests_dir: "tests"
+
+splits:
+  split_strategy: "chronological"
+  train:
+    end_date: "2016-07-31"
+    description: "Training window: 2015-07-01 to 2016-07-31 (~12 months)"
+  validation:
+    start_date: "2016-08-01"
+    end_date: "2016-12-31"
+    description: "Validation window: 2016-08-01 to 2016-12-31 (~5 months)"
+  test:
+    start_date: "2017-01-01"
+    end_date: "2017-08-31"
+    description: "Holdout test window: 2017-01-01 to 2017-08-31 (~8 months)"
+
+target:
+  target_column: "risk_class"
+  label_column: "risk_label"
+  classes:
+    0: "BALANCED"
+    1: "UNSOLD"
+    2: "SHORTAGE"
+  thresholds:
+    unsold_utilization_max: 0.70      # Utilization < 70% -> UNSOLD (excess inventory)
+    shortage_stockout_demand_min: 1.0  # Unmet demand >= 1 room -> SHORTAGE (insufficient inventory)
+    balanced_utilization_min: 0.70    # 70% <= Utilization <= 100% and no stockout -> BALANCED
