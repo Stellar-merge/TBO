@@ -12,8 +12,16 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import xgboost as xgb
 import joblib
 
-BASE_DIR = Path(__file__).parent
-flight_path = BASE_DIR / 'archive (3)' / 'flights_sample_3m.csv'
+BASE_DIR = Path(__file__).resolve().parent
+
+# Check potential dataset locations (subfolder, repo root, or Datasets folder)
+candidate_paths = [
+    BASE_DIR / 'archive (3)' / 'flights_sample_3m.csv',
+    BASE_DIR.parent.parent / 'archive (3)' / 'flights_sample_3m.csv',
+    BASE_DIR.parent.parent / 'Datasets' / 'flights_sample_3m.csv',
+    Path('archive (3)/flights_sample_3m.csv'),
+]
+flight_path = next((p for p in candidate_paths if p.exists()), candidate_paths[1])
 
 print('=' * 60)
 print('  Flight Cancellation Prediction – Target >95% Accuracy')
