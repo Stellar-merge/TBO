@@ -1,9 +1,12 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   Building2, 
+  Plane,
   Search, 
   X, 
-  ChevronDown,
+  ChevronDown, 
+  ChevronLeft,
+  ChevronRight,
   RotateCcw, 
   List as ListIcon, 
   Map as MapIcon, 
@@ -15,11 +18,14 @@ import {
   Minus, 
   Crosshair, 
   ExternalLink,
-  Sparkles,
   Calendar,
   DollarSign,
   ShieldCheck,
-  Check
+  Check,
+  Navigation,
+  Landmark,
+  Waves,
+  Palmtree
 } from 'lucide-react';
 import { initialOpportunities } from '../data/opportunityDeals';
 import type { OpportunityCardItem } from '../data/opportunityDeals';
@@ -32,28 +38,286 @@ export const CleanDashboard: React.FC = () => {
   const [popupVisible, setPopupVisible] = useState<boolean>(true);
   const [modalItem, setModalItem] = useState<OpportunityCardItem | null>(null);
 
-  // 1. Hotel Category Tabs (Collapsed into hamburger dropdown with lower arrow)
+  // 1. Airbnb-Style Search Controls (Top: Hotels/Flights, Bottom: Budget, Dates, Location, Risk)
+  const [activeAssetClass, setActiveAssetClass] = useState<'hotels' | 'flights'>('hotels');
+  const [activeAirbnbSegment, setActiveAirbnbSegment] = useState<'budget' | 'dates' | 'location' | 'risk' | null>(null);
+  const [airbnbBudget, setAirbnbBudget] = useState<number>(500000);
+  const [airbnbStartDate, setAirbnbStartDate] = useState<string>('2026-11-19');
+  const [airbnbEndDate, setAirbnbEndDate] = useState<string>('2026-11-25');
+  const [airbnbLocation, setAirbnbLocation] = useState<string>('Nearby');
+  const [airbnbRisk, setAirbnbRisk] = useState<'Conservative' | 'Moderate' | 'Aggressive'>('Moderate');
+  const airbnbBarRef = useRef<HTMLDivElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
+
+  // Calendar State (November 2026 baseline matching screenshot)
+  const [calendarBaseYear, setCalendarBaseYear] = useState<number>(2026);
+  const [calendarBaseMonth, setCalendarBaseMonth] = useState<number>(10); // 10 = November (0-indexed)
+  const [dateMode, setDateMode] = useState<'dates' | 'flexible'>('dates');
+  const [dateFlexibility, setDateFlexibility] = useState<string>('Exact dates');
+
+  // Month navigation handlers
+  const handlePrevMonth = () => {
+    setCalendarBaseMonth((prev) => {
+      if (prev === 0) {
+        setCalendarBaseYear((y) => y - 1);
+        return 11;
+      }
+      return prev - 1;
+    });
+  };
+
+  const handleNextMonth = () => {
+    setCalendarBaseMonth((prev) => {
+      if (prev === 11) {
+        setCalendarBaseYear((y) => y + 1);
+        return 0;
+      }
+      return prev + 1;
+    });
+  };
+
+  const month2 = (calendarBaseMonth + 1) % 12;
+  const year2 = calendarBaseMonth === 11 ? calendarBaseYear + 1 : calendarBaseYear;
+
+  // Calendar date click selection logic
+  const handleSelectCalendarDate = (dateStr: string) => {
+    if (!airbnbStartDate || (airbnbStartDate && airbnbEndDate)) {
+      setAirbnbStartDate(dateStr);
+      setAirbnbEndDate('');
+    } else if (airbnbStartDate && !airbnbEndDate) {
+      if (dateStr >= airbnbStartDate) {
+        setAirbnbEndDate(dateStr);
+      } else {
+        setAirbnbStartDate(dateStr);
+      }
+    }
+  };
+
+  // Suggested Destinations matching exact user screenshot
+  const suggestedDestinations = [
+    {
+      name: 'Nearby',
+      subtitle: "Find what’s around you",
+      icon: Navigation,
+      iconColor: 'text-sky-500',
+      iconBg: 'bg-sky-50',
+    },
+    {
+      name: 'Kolkata, West Bengal',
+      subtitle: 'For sights like Victoria Memorial',
+      icon: Landmark,
+      iconColor: 'text-rose-500',
+      iconBg: 'bg-rose-50',
+    },
+    {
+      name: 'Puri, Odisha',
+      subtitle: 'For its seaside allure',
+      icon: Waves,
+      iconColor: 'text-blue-600',
+      iconBg: 'bg-blue-50',
+    },
+    {
+      name: 'Varanasi, Uttar Pradesh',
+      subtitle: 'Popular with travellers near you',
+      icon: Landmark,
+      iconColor: 'text-rose-500',
+      iconBg: 'bg-rose-50',
+    },
+    {
+      name: 'North Goa, Goa',
+      subtitle: 'For its bustling nightlife',
+      icon: Palmtree,
+      iconColor: 'text-amber-600',
+      iconBg: 'bg-amber-50',
+    },
+    {
+      name: 'Mumbai, Maharashtra',
+      subtitle: 'For sights like Gateway of India',
+      icon: Building2,
+      iconColor: 'text-emerald-600',
+      iconBg: 'bg-emerald-50',
+    },
+    {
+      name: 'Dubai, UAE',
+      subtitle: 'For ultra-luxury high-yield allotments',
+      icon: Building2,
+      iconColor: 'text-amber-600',
+      iconBg: 'bg-amber-50',
+    },
+    {
+      name: 'Lisbon, Portugal',
+      subtitle: 'For vibrant heritage & coastal commerce',
+      icon: Landmark,
+      iconColor: 'text-indigo-600',
+      iconBg: 'bg-indigo-50',
+    },
+    {
+      name: 'Tokyo, Japan',
+      subtitle: 'For rapid turnover & business transit',
+      icon: Building2,
+      iconColor: 'text-purple-600',
+      iconBg: 'bg-purple-50',
+    },
+    {
+      name: 'All Destinations',
+      subtitle: 'Global portfolio optimization across all markets',
+      icon: Search,
+      iconColor: 'text-stone-700',
+      iconBg: 'bg-stone-100',
+    },
+  ];
+
+  // Auto-suggestion filtered destinations based on typed query
+  const filteredDestinations = useMemo(() => {
+    const q = airbnbLocation.trim().toLowerCase();
+    if (!q || q === 'nearby' || q === 'all destinations') {
+      return suggestedDestinations;
+    }
+    return suggestedDestinations.filter(
+      (dest) =>
+        dest.name.toLowerCase().includes(q) ||
+        dest.subtitle.toLowerCase().includes(q)
+    );
+  }, [suggestedDestinations, airbnbLocation]);
+
+  // Helper to render one month of the dual-month calendar
+  const renderCalendarMonth = (year: number, month: number, isLeft: boolean) => {
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const firstDay = new Date(year, month, 1).getDay(); // 0 = Sunday
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const blanks = Array.from({ length: firstDay }, (_, i) => i);
+
+    return (
+      <div className="flex-1 min-w-[280px]">
+        {/* Month Header */}
+        <div className="flex items-center justify-between mb-4 h-8 px-1">
+          {isLeft ? (
+            <button
+              type="button"
+              onClick={handlePrevMonth}
+              className="w-8 h-8 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-700 transition-colors cursor-pointer"
+              aria-label="Previous month"
+            >
+              <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          ) : <div className="w-8" />}
+
+          <h4 className="text-sm font-bold text-stone-900 tracking-tight select-none">
+            {monthNames[month]} {year}
+          </h4>
+
+          {!isLeft ? (
+            <button
+              type="button"
+              onClick={handleNextMonth}
+              className="w-8 h-8 rounded-full hover:bg-stone-100 flex items-center justify-center text-stone-700 transition-colors cursor-pointer"
+              aria-label="Next month"
+            >
+              <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          ) : <div className="w-8" />}
+        </div>
+
+        {/* Days of Week Header */}
+        <div className="grid grid-cols-7 mb-2 text-center">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+            <span key={idx} className="text-xs font-medium text-stone-400 py-1 select-none">
+              {day}
+            </span>
+          ))}
+        </div>
+
+        {/* Days Grid */}
+        <div className="grid grid-cols-7 gap-y-1 text-center">
+          {blanks.map((b) => (
+            <div key={`blank-${b}`} className="h-10" />
+          ))}
+          {days.map((d) => {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            // Match screenshot where dates before Nov 19 2026 are dimmed
+            const isPast = year < 2026 || (year === 2026 && month < 10) || (year === 2026 && month === 10 && d < 19);
+            const isStart = dateStr === airbnbStartDate;
+            const isEnd = dateStr === airbnbEndDate;
+            const isInRange = airbnbStartDate && airbnbEndDate && dateStr > airbnbStartDate && dateStr < airbnbEndDate;
+
+            return (
+              <div
+                key={d}
+                className={`h-10 flex items-center justify-center relative ${
+                  isInRange ? 'bg-[#f7f7f7]' : ''
+                } ${
+                  isStart && airbnbEndDate ? 'bg-gradient-to-r from-transparent to-[#f7f7f7]' : ''
+                } ${
+                  isEnd && airbnbStartDate ? 'bg-gradient-to-l from-transparent to-[#f7f7f7]' : ''
+                }`}
+              >
+                <button
+                  type="button"
+                  disabled={isPast}
+                  onClick={() => handleSelectCalendarDate(dateStr)}
+                  className={`w-9 h-9 text-xs flex items-center justify-center transition-all cursor-pointer ${
+                    isStart || isEnd
+                      ? 'bg-stone-900 text-white font-bold rounded-full shadow-xs z-10'
+                      : isPast
+                      ? 'text-stone-300 cursor-not-allowed font-normal'
+                      : isInRange
+                      ? 'text-stone-900 font-semibold z-10'
+                      : 'text-stone-800 hover:border hover:border-stone-900 rounded-full font-semibold'
+                  }`}
+                >
+                  {d}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Date formatter for Airbnb Dates display
+  const formatDatesDisplay = (startStr: string, endStr: string) => {
+    if (!startStr && !endStr) return 'Add dates';
+    try {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      if (startStr && !endStr) {
+        const s = new Date(startStr);
+        return `${months[s.getMonth()]} ${String(s.getDate()).padStart(2, '0')}`;
+      }
+      const s = new Date(startStr);
+      const e = new Date(endStr);
+      const sMonth = months[s.getMonth()];
+      const eMonth = months[e.getMonth()];
+      const sDay = String(s.getDate()).padStart(2, '0');
+      const eDay = String(e.getDate()).padStart(2, '0');
+      if (sMonth === eMonth) {
+        return `${sMonth} ${sDay} – ${eDay}`;
+      }
+      return `${sMonth} ${sDay} – ${eMonth} ${eDay}`;
+    } catch {
+      return 'Nov 19 – 25';
+    }
+  };
+
+  // 2. Hotel Category Tabs
   const [activeCategory, setActiveCategory] = useState<
     'All' | 'Luxury Resorts' | 'City Business' | 'Boutique Stays' | 'Heritage Villas' | 'High Margin'
   >('All');
-  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState<boolean>(false);
-  const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
-  // 2. Search & Model Parameters
+  // 3. Search & Model Parameters
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedDestination, setSelectedDestination] = useState<string>('All Destinations');
   const [travelWindowFilter, setTravelWindowFilter] = useState<string>('All');
   const [budgetCapFilter, setBudgetCapFilter] = useState<string>('All');
   const [riskTierFilter, setRiskTierFilter] = useState<string>('All');
 
-  // Budget Tracker Bar State (Crucial)
+  // Budget Tracker Bar State (Synchronized with airbnbBudget)
   const [budgetUsed] = useState<number>(120000);
-  const budgetTotal = useMemo(() => {
-    if (budgetCapFilter === '< $280k') return 280000;
-    if (budgetCapFilter === '$280k - $350k') return 350000;
-    if (budgetCapFilter === '> $350k') return 750000;
-    return 500000;
-  }, [budgetCapFilter]);
+  const budgetTotal = airbnbBudget;
   const budgetPercentage = Math.min(100, Math.round((budgetUsed / budgetTotal) * 100));
 
   // Popover state for the interactive constraint chips
@@ -177,11 +441,11 @@ export const CleanDashboard: React.FC = () => {
   const headerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      if (airbnbBarRef.current && !airbnbBarRef.current.contains(e.target as Node)) {
+        setActiveAirbnbSegment(null);
+      }
       if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setActiveChipPopover(null);
-      }
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
-        setIsCategoryDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -191,139 +455,462 @@ export const CleanDashboard: React.FC = () => {
   return (
     <div className="w-full min-h-screen bg-[#f5f2eb] text-stone-900 pb-16 font-sans select-none antialiased">
       
-      {/* ─── Top Header Bar with Search & Pill Tabs (Matching Reference Image) ─── */}
-      <div className="sticky top-[52px] z-30 bg-[#f5f2eb]/90 backdrop-blur-xl border-b border-stone-200/70 px-4 sm:px-8 py-3.5 transition-all">
-        <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-3">
+      {/* ─── Airbnb-Style Procurement Query Header (Exact replica of user reference image) ─── */}
+      <div className="bg-[#f5f2eb] border-b border-stone-200/80 pt-6 pb-6 px-4 sm:px-8">
+        <div ref={airbnbBarRef} className="max-w-[960px] mx-auto flex flex-col items-center">
           
-          {/* Left: Rounded Search Pill */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center bg-white border border-stone-200/80 rounded-full px-3.5 py-1.5 shadow-sm focus-within:ring-2 focus-within:ring-stone-400/30 transition-all">
-              <Search className="w-3.5 h-3.5 text-stone-400 shrink-0 mr-2" />
-              <input
-                type="text"
-                placeholder="Search hotel, city or resort..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent text-xs text-stone-800 placeholder-stone-400 outline-none w-36 sm:w-48 font-medium"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="p-0.5 text-stone-400 hover:text-stone-700 transition-colors"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+          {/* TOP: Category Tabs (Hotels | Flights) with Active Underline */}
+          <div className="flex items-center gap-12 mb-4 select-none">
+            {/* Hotels Tab (Active by default) */}
+            <button
+              type="button"
+              onClick={() => setActiveAssetClass('hotels')}
+              className={`flex items-center gap-2 pb-2 text-sm font-semibold transition-all relative cursor-pointer ${
+                activeAssetClass === 'hotels'
+                  ? 'text-stone-950 font-bold'
+                  : 'text-stone-400 hover:text-stone-700 font-medium'
+              }`}
+            >
+              <Building2 className={`w-4 h-4 ${activeAssetClass === 'hotels' ? 'text-stone-950' : 'text-stone-400'}`} />
+              <span>Hotels</span>
+              {activeAssetClass === 'hotels' && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-stone-900 rounded-full" />
               )}
-            </div>
+            </button>
 
-            {/* Center-Left: Category Selector (Hamburger / Dropdown way with side lower arrow) */}
-            <div ref={categoryDropdownRef} className="relative">
-              <button
-                type="button"
-                onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-2 shadow-sm ${
-                  activeCategory !== 'All'
-                    ? 'bg-[#1c1917] text-white border border-[#1c1917]'
-                    : 'bg-white hover:bg-stone-50 text-stone-800 border border-stone-200/80'
-                }`}
-                aria-expanded={isCategoryDropdownOpen}
-                aria-haspopup="listbox"
-                title="Select Hotel Category"
-              >
-                <div className="flex items-center gap-1.5">
-                  <Building2 className={`w-3.5 h-3.5 ${activeCategory !== 'All' ? 'text-amber-400' : 'text-stone-500'}`} />
-                  <span>{hotelCategories.find((c) => c.id === activeCategory)?.label || 'All Hotels'}</span>
-                </div>
-                {/* Side lower arrow */}
-                <ChevronDown className={`w-3.5 h-3.5 text-stone-400 transition-transform duration-200 ${
-                  isCategoryDropdownOpen ? 'rotate-180' : ''
-                }`} />
-              </button>
-
-              {/* Dropdown Menu presenting all options under All Hotels */}
-              {isCategoryDropdownOpen && (
-                <div 
-                  role="listbox"
-                  className="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-elevation-4 border border-stone-200/80 p-1.5 z-40 animate-scale-in"
-                >
-                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider px-2.5 py-1 block select-none">
-                    Hotel Categories
-                  </span>
-                  {hotelCategories.map((cat) => {
-                    const isSelected = activeCategory === cat.id;
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        role="option"
-                        aria-selected={isSelected}
-                        onClick={() => {
-                          setActiveCategory(cat.id);
-                          setIsCategoryDropdownOpen(false);
-                        }}
-                        className={`w-full px-2.5 py-2 rounded-xl text-xs font-medium transition-colors flex items-center justify-between ${
-                          isSelected
-                            ? 'bg-stone-900 text-white font-bold'
-                            : 'text-stone-700 hover:bg-stone-100/80 hover:text-stone-900'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Building2 className={`w-3.5 h-3.5 ${isSelected ? 'text-amber-400' : 'text-stone-400'}`} />
-                          <span>{cat.label}</span>
-                        </div>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-amber-300" />}
-                      </button>
-                    );
-                  })}
-                </div>
+            {/* Flights Tab */}
+            <button
+              type="button"
+              onClick={() => setActiveAssetClass('flights')}
+              className={`flex items-center gap-2 pb-2 text-sm font-semibold transition-all relative cursor-pointer ${
+                activeAssetClass === 'flights'
+                  ? 'text-stone-950 font-bold'
+                  : 'text-stone-400 hover:text-stone-700 font-medium'
+              }`}
+            >
+              <Plane className={`w-4 h-4 ${activeAssetClass === 'flights' ? 'text-stone-950' : 'text-stone-400'}`} />
+              <span>Flights</span>
+              {activeAssetClass === 'flights' && (
+                <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-stone-900 rounded-full" />
               )}
-            </div>
+            </button>
           </div>
 
-          {/* Right: View Mode Toggle & Primary Action Pill */}
-          <div className="flex items-center gap-2.5">
-            {/* View Mode Switcher Pill */}
-            <div className="flex items-center bg-white border border-stone-200/80 p-0.5 rounded-full shadow-sm">
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                  viewMode === 'list' 
-                    ? 'bg-[#1c1917] text-white shadow-sm' 
-                    : 'text-stone-500 hover:text-stone-800'
-                }`}
-              >
-                <ListIcon className="w-3 h-3" />
-                <span>List</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('split')}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                  viewMode === 'split' || viewMode === 'map'
-                    ? 'bg-[#1c1917] text-white shadow-sm' 
-                    : 'text-stone-500 hover:text-stone-800'
-                }`}
-              >
-                <MapIcon className="w-3 h-3" />
-                <span>Map</span>
-              </button>
+          {/* BOTTOM: Airbnb Rounded-Full Pill Search Bar (Enlarged with Direct Typing & Auto-Suggestions) */}
+          <div className={`w-full rounded-full transition-all p-2 sm:p-2.5 min-h-[68px] sm:min-h-[74px] flex items-center relative ${
+            activeAirbnbSegment 
+              ? 'bg-[#ebebeb] shadow-[0_3px_12px_rgba(0,0,0,0.06)]' 
+              : 'bg-white border border-stone-200/90 shadow-[0_3px_14px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.12)]'
+          }`}>
+            
+            {/* 1. Budget Segment */}
+            <button
+              type="button"
+              onClick={() => setActiveAirbnbSegment(prev => prev === 'budget' ? null : 'budget')}
+              className={`flex-1 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-left transition-all cursor-pointer focus:outline-hidden ${
+                activeAirbnbSegment === 'budget' 
+                  ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.12)] border border-stone-900' 
+                  : activeAirbnbSegment 
+                    ? 'hover:bg-black/5' 
+                    : 'hover:bg-stone-50'
+              }`}
+            >
+              <span className="text-xs sm:text-[13px] font-bold text-stone-900 block leading-tight">Budget</span>
+              <span className="text-sm sm:text-[15px] text-stone-600 font-semibold truncate block mt-0.5">
+                ${airbnbBudget.toLocaleString()}
+              </span>
+            </button>
+
+            {/* Vertical Divider 1 */}
+            <div className={`w-[1px] h-7 sm:h-8 bg-stone-200 self-center shrink-0 ${
+              activeAirbnbSegment === 'budget' || activeAirbnbSegment === 'dates' ? 'opacity-0' : 'opacity-100'
+            }`} />
+
+            {/* 2. Dates Segment (Like Airbnb with Start and End Dates) */}
+            <button
+              type="button"
+              onClick={() => setActiveAirbnbSegment(prev => prev === 'dates' ? null : 'dates')}
+              className={`flex-1 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-left transition-all cursor-pointer focus:outline-hidden ${
+                activeAirbnbSegment === 'dates' 
+                  ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.12)] border border-stone-900' 
+                  : activeAirbnbSegment 
+                    ? 'hover:bg-black/5' 
+                    : 'hover:bg-stone-50'
+              }`}
+            >
+              <span className="text-xs sm:text-[13px] font-bold text-stone-900 block leading-tight">Dates</span>
+              <span className="text-sm sm:text-[15px] text-stone-600 font-semibold truncate block mt-0.5">
+                {formatDatesDisplay(airbnbStartDate, airbnbEndDate)}
+              </span>
+            </button>
+
+            {/* Vertical Divider 2 */}
+            <div className={`w-[1px] h-7 sm:h-8 bg-stone-200 self-center shrink-0 ${
+              activeAirbnbSegment === 'dates' || activeAirbnbSegment === 'location' ? 'opacity-0' : 'opacity-100'
+            }`} />
+
+            {/* 3. Location Segment (Direct Typing & Auto-Suggestions like Airbnb) */}
+            <div
+              onClick={() => {
+                setActiveAirbnbSegment('location');
+                locationInputRef.current?.focus();
+              }}
+              className={`flex-1 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-left transition-all cursor-pointer ${
+                activeAirbnbSegment === 'location' 
+                  ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.12)] border border-stone-900' 
+                  : activeAirbnbSegment 
+                    ? 'hover:bg-black/5' 
+                    : 'hover:bg-stone-50'
+              }`}
+            >
+              <label className="text-xs sm:text-[13px] font-bold text-stone-900 block leading-tight cursor-pointer select-none">
+                Location
+              </label>
+              <div className="flex items-center justify-between mt-0.5">
+                <input
+                  ref={locationInputRef}
+                  type="text"
+                  value={airbnbLocation}
+                  onChange={(e) => {
+                    setAirbnbLocation(e.target.value);
+                    if (activeAirbnbSegment !== 'location') {
+                      setActiveAirbnbSegment('location');
+                    }
+                  }}
+                  onFocus={() => setActiveAirbnbSegment('location')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (filteredDestinations.length > 0) {
+                        const top = filteredDestinations[0];
+                        setAirbnbLocation(top.name);
+                        setSelectedDestination(top.name === 'Nearby' ? 'All Destinations' : top.name);
+                      } else {
+                        setSelectedDestination(airbnbLocation);
+                      }
+                      setActiveAirbnbSegment('dates');
+                    }
+                  }}
+                  placeholder="Search destinations"
+                  className="w-full bg-transparent text-sm sm:text-[15px] font-semibold text-stone-900 placeholder:text-stone-400 outline-none truncate"
+                />
+                {airbnbLocation && activeAirbnbSegment === 'location' && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAirbnbLocation('');
+                      locationInputRef.current?.focus();
+                    }}
+                    className="w-5 h-5 rounded-full bg-stone-200/80 hover:bg-stone-300 flex items-center justify-center shrink-0 ml-1 text-stone-600 transition-colors cursor-pointer"
+                    title="Clear destination"
+                  >
+                    <X className="w-3 h-3 stroke-[2.5]" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            {/* Run MILP Allocation Action Pill (Matching dark button in screenshot) */}
+            {/* Vertical Divider 3 */}
+            <div className={`w-[1px] h-7 sm:h-8 bg-stone-200 self-center shrink-0 ${
+              activeAirbnbSegment === 'location' || activeAirbnbSegment === 'risk' ? 'opacity-0' : 'opacity-100'
+            }`} />
+
+            {/* 4. Risk Tolerance Segment */}
+            <button
+              type="button"
+              onClick={() => setActiveAirbnbSegment(prev => prev === 'risk' ? null : 'risk')}
+              className={`flex-1 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-left transition-all cursor-pointer focus:outline-hidden ${
+                activeAirbnbSegment === 'risk' 
+                  ? 'bg-white shadow-[0_2px_8px_rgba(0,0,0,0.12)] border border-stone-900' 
+                  : activeAirbnbSegment 
+                    ? 'hover:bg-black/5' 
+                    : 'hover:bg-stone-50'
+              }`}
+            >
+              <span className="text-xs sm:text-[13px] font-bold text-stone-900 block leading-tight">Risk Tolerance</span>
+              <span className="text-sm sm:text-[15px] text-stone-600 font-semibold truncate block mt-0.5">
+                {airbnbRisk === 'Conservative' ? 'Conservative (P10)' : airbnbRisk === 'Aggressive' ? 'Aggressive (P90)' : 'Moderate (P50)'}
+              </span>
+            </button>
+
+            {/* Far Right: Circular Red Search Action Button (Exact replica of Airbnb) */}
             <button
               type="button"
               onClick={() => {
-                // Quick simulated optimization feedback
+                setActiveAirbnbSegment(null);
+                setSelectedDestination(airbnbLocation === 'Nearby' ? 'All Destinations' : (airbnbLocation || 'All Destinations'));
                 setSelectedId('dumble-st');
                 setPopupVisible(true);
               }}
-              className="bg-[#1c1917] hover:bg-black active:scale-[0.98] text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 transition-all"
+              className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-[#EF4444] hover:bg-[#DC2626] active:scale-95 text-white flex items-center justify-center shrink-0 shadow-md transition-all cursor-pointer ml-2 mr-1"
+              aria-label="Search and run engine"
+              title="Search and run engine"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Optimize Portfolio</span>
+              <Search className="w-5 h-5 stroke-[2.8]" />
             </button>
+
+            {/* ─── 1. Budget Popover ─── */}
+            {activeAirbnbSegment === 'budget' && (
+              <div className="absolute top-full left-0 mt-3 w-88 bg-white rounded-[32px] shadow-[0_12px_36px_rgba(0,0,0,0.16)] border border-stone-200/90 p-6 z-50 text-left animate-scale-in">
+                <span className="text-xs font-bold text-stone-900 block mb-1">
+                  Total Investment Budget
+                </span>
+                <p className="text-[11px] text-stone-500 mb-4">
+                  Hard capital constraint enforced across wholesale hotel allocations ($B).
+                </p>
+                <div className="relative mb-4">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 font-bold text-sm">$</span>
+                  <input
+                    type="number"
+                    value={airbnbBudget}
+                    onChange={(e) => setAirbnbBudget(Math.max(0, parseInt(e.target.value || '0', 10)))}
+                    className="w-full bg-stone-50 border border-stone-200/80 rounded-2xl pl-8 pr-3 py-2.5 text-sm font-bold text-stone-900 outline-none font-mono"
+                  />
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[100000, 250000, 500000, 1000000].map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setAirbnbBudget(val)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold font-mono transition-colors cursor-pointer ${
+                        airbnbBudget === val ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                      }`}
+                    >
+                      ${val >= 1000000 ? `${val / 1000000}M` : `${val / 1000}K`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ─── 2. Dates Popover (Exact Replica of Airbnb media_1795074622760_548e40f6.png) ─── */}
+            {activeAirbnbSegment === 'dates' && (
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[720px] max-w-[95vw] bg-white rounded-[32px] shadow-[0_12px_36px_rgba(0,0,0,0.16)] border border-stone-200/90 p-7 z-50 text-left animate-scale-in">
+                
+                {/* Top Segmented Pill Toggle: [ Dates | Flexible ] */}
+                <div className="bg-[#f0ece5] p-1 rounded-full flex items-center justify-center w-fit mx-auto mb-6">
+                  <button
+                    type="button"
+                    onClick={() => setDateMode('dates')}
+                    className={`rounded-full px-8 py-2 text-xs font-bold transition-all cursor-pointer ${
+                      dateMode === 'dates' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    Dates
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDateMode('flexible')}
+                    className={`rounded-full px-8 py-2 text-xs font-bold transition-all cursor-pointer ${
+                      dateMode === 'flexible' ? 'bg-white text-stone-900 shadow-xs' : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                  >
+                    Flexible
+                  </button>
+                </div>
+
+                {dateMode === 'dates' ? (
+                  <>
+                    {/* Dual-Month Calendar View */}
+                    <div className="flex flex-col md:flex-row gap-8 mb-6">
+                      {renderCalendarMonth(calendarBaseYear, calendarBaseMonth, true)}
+                      {renderCalendarMonth(year2, month2, false)}
+                    </div>
+
+                    {/* Bottom Flexibility Pills */}
+                    <div className="flex items-center gap-2 pt-4 border-t border-stone-100 flex-wrap">
+                      {[
+                        'Exact dates',
+                        '± 1 day',
+                        '± 2 days',
+                        '± 3 days',
+                        '± 7 days',
+                        '± 14 days'
+                      ].map((chip) => (
+                        <button
+                          key={chip}
+                          type="button"
+                          onClick={() => setDateFlexibility(chip)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                            dateFlexibility === chip
+                              ? 'border border-stone-900 text-stone-900 font-bold bg-stone-50 shadow-xs'
+                              : 'border border-stone-200 hover:border-stone-400 text-stone-700'
+                          }`}
+                        >
+                          {chip}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  /* Flexible Duration View */
+                  <div className="space-y-6 py-2">
+                    <div>
+                      <span className="text-xs font-bold text-stone-900 block mb-3">
+                        How long would you like to stay?
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {['A weekend', 'A week', 'A month', 'Any length'].map((dur) => (
+                          <button
+                            key={dur}
+                            type="button"
+                            onClick={() => setDateFlexibility(dur)}
+                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                              dateFlexibility === dur
+                                ? 'border border-stone-900 text-stone-900 font-bold bg-stone-50'
+                                : 'border border-stone-200 hover:border-stone-400 text-stone-700'
+                            }`}
+                          >
+                            {dur}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-xs font-bold text-stone-900 block mb-3">
+                        When would you like to go?
+                      </span>
+                      <div className="grid grid-cols-4 gap-3">
+                        {[
+                          { name: 'November 2026', range: ['2026-11-01', '2026-11-30'] },
+                          { name: 'December 2026', range: ['2026-12-01', '2026-12-31'] },
+                          { name: 'January 2027', range: ['2027-01-01', '2027-01-31'] },
+                          { name: 'Q1 2027 Peak', range: ['2027-01-01', '2027-03-31'] },
+                        ].map((m) => (
+                          <button
+                            key={m.name}
+                            type="button"
+                            onClick={() => {
+                              setAirbnbStartDate(m.range[0]);
+                              setAirbnbEndDate(m.range[1]);
+                              setActiveAirbnbSegment(null);
+                            }}
+                            className="p-4 rounded-2xl border border-stone-200 hover:border-stone-900 hover:bg-stone-50 transition-all text-left cursor-pointer group"
+                          >
+                            <Calendar className="w-5 h-5 text-stone-400 group-hover:text-stone-900 mb-2 transition-colors" />
+                            <div className="text-xs font-bold text-stone-900">{m.name}</div>
+                            <div className="text-[10.5px] text-stone-500 mt-0.5">Flexible Allotment</div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            )}
+
+            {/* ─── 3. Location Popover (Exact Replica of Airbnb with Live Auto-Suggestions) ─── */}
+            {activeAirbnbSegment === 'location' && (
+              <div className="absolute top-full left-1/3 -translate-x-1/3 mt-3 w-[460px] max-w-[95vw] bg-white rounded-[32px] shadow-[0_12px_36px_rgba(0,0,0,0.16)] border border-stone-200/90 p-6 z-50 text-left animate-scale-in">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <span className="text-xs font-bold text-stone-900 tracking-tight">
+                    {airbnbLocation.trim() && airbnbLocation !== 'Nearby' && airbnbLocation !== 'All Destinations'
+                      ? 'Matching destinations'
+                      : 'Suggested destinations'}
+                  </span>
+                  {filteredDestinations.length > 0 && (
+                    <span className="text-[11px] text-stone-400 font-medium">
+                      {filteredDestinations.length} available
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1 max-h-[380px] overflow-y-auto pr-1">
+                  {filteredDestinations.length > 0 ? (
+                    filteredDestinations.map((dest) => (
+                      <button
+                        key={dest.name}
+                        type="button"
+                        onClick={() => {
+                          setAirbnbLocation(dest.name);
+                          setSelectedDestination(dest.name === 'Nearby' ? 'All Destinations' : dest.name);
+                          setActiveAirbnbSegment('dates');
+                        }}
+                        className="w-full flex items-center gap-4 p-2.5 rounded-2xl hover:bg-stone-100 transition-colors cursor-pointer text-left group"
+                      >
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${dest.iconBg} ${dest.iconColor}`}>
+                          <dest.icon className="w-5 h-5 stroke-[2.2]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-stone-900 group-hover:text-black leading-snug">
+                            {dest.name}
+                          </div>
+                          <div className="text-xs text-stone-500 truncate mt-0.5 font-normal">
+                            {dest.subtitle}
+                          </div>
+                        </div>
+                        {airbnbLocation === dest.name && (
+                          <Check className="w-4 h-4 text-stone-900 shrink-0 mr-1" />
+                        )}
+                      </button>
+                    ))
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDestination(airbnbLocation);
+                        setActiveAirbnbSegment('dates');
+                      }}
+                      className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-stone-100 transition-colors cursor-pointer text-left group"
+                    >
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 bg-stone-100 text-stone-700">
+                        <Search className="w-5 h-5 stroke-[2.2]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-stone-900 group-hover:text-black leading-snug">
+                          Search "{airbnbLocation}"
+                        </div>
+                        <div className="text-xs text-stone-500 truncate mt-0.5 font-normal">
+                          Discover hotel inventory in this destination
+                        </div>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ─── 4. Risk Tolerance Popover ─── */}
+            {activeAirbnbSegment === 'risk' && (
+              <div className="absolute top-full right-0 mt-3 w-88 bg-white rounded-[32px] shadow-[0_12px_36px_rgba(0,0,0,0.16)] border border-stone-200/90 p-5 z-50 text-left animate-scale-in">
+                <span className="text-xs font-bold text-stone-900 block mb-3 px-1">
+                  Select Risk Tolerance
+                </span>
+                <div className="space-y-2">
+                  {[
+                    { id: 'Conservative', label: 'Conservative (P10)', desc: 'P10 demand floor. Prioritizes locked-in margins & zero room spoilage risk.' },
+                    { id: 'Moderate', label: 'Moderate (P50)', desc: 'P50 median baseline. Balanced Sharpe ratio across seasonal patterns (Default).' },
+                    { id: 'Aggressive', label: 'Aggressive (P90)', desc: 'P90 upside surge. Pre-buys higher allotments to capture peak demand.' },
+                  ].map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => {
+                        setAirbnbRisk(r.id as any);
+                        setActiveAirbnbSegment(null);
+                      }}
+                      className={`w-full text-left p-3 rounded-2xl text-xs transition-colors border cursor-pointer ${
+                        airbnbRisk === r.id
+                          ? 'bg-stone-900 text-white border-stone-900 shadow-sm'
+                          : 'bg-stone-50 hover:bg-stone-100 text-stone-800 border-stone-200/80'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="font-bold">{r.label}</span>
+                        {airbnbRisk === r.id && <Check className="w-3.5 h-3.5 text-amber-300" />}
+                      </div>
+                      <p className={`text-[10.5px] leading-tight ${airbnbRisk === r.id ? 'text-stone-300' : 'text-stone-500'}`}>
+                        {r.desc}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
 
         </div>
@@ -602,6 +1189,55 @@ export const CleanDashboard: React.FC = () => {
           {viewMode !== 'map' && (
             <div className={viewMode === 'list' ? 'col-span-full' : 'lg:col-span-6 xl:col-span-6'}>
               
+              {/* Category Pills & View Mode Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4 px-1">
+                {/* Hotel category pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-xl">
+                  {hotelCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setActiveCategory(cat.id)}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        activeCategory === cat.id
+                          ? 'bg-stone-900 text-white shadow-xs'
+                          : 'bg-white hover:bg-stone-100 text-stone-600 border border-stone-200/80'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* View Mode Switcher */}
+                <div className="flex items-center bg-white border border-stone-200/80 p-0.5 rounded-full shadow-xs shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                      viewMode === 'list' 
+                        ? 'bg-stone-900 text-white shadow-xs' 
+                        : 'text-stone-500 hover:text-stone-800'
+                    }`}
+                  >
+                    <ListIcon className="w-3 h-3" />
+                    <span>List</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('split')}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                      viewMode === 'split'
+                        ? 'bg-stone-900 text-white shadow-xs' 
+                        : 'text-stone-500 hover:text-stone-800'
+                    }`}
+                  >
+                    <MapIcon className="w-3 h-3" />
+                    <span>Map</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Results status header */}
               <div className="flex items-center justify-between mb-3 px-1">
                 <span className="text-xs font-bold text-stone-800">

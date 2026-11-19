@@ -22,7 +22,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+        sans: ['Geist', 'Plus Jakarta Sans', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
+        mono: ['Geist Mono', 'JetBrains Mono', 'ui-monospace', 'monospace'],
         editorial: ['Newsreader', 'Instrument Serif', 'Georgia', 'serif'],
       },
       keyframes: {
