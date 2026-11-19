@@ -152,16 +152,16 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
           <span className="relative inline-flex rounded-full h-4 w-4 bg-[#0D4E43] border-2 border-white" />
         </span>
 
-        {/* Teddy Bear Trigger Button */}
+        {/* Cute Cat Avatar Trigger Button (Replica of media_1795116922760_d15d191e.png) */}
         <motion.button
           type="button"
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.94 }}
           onClick={() => setIsOpen((prev) => !prev)}
-          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-[0_12px_28px_rgba(0,0,0,0.18)] border-2 transition-all cursor-pointer relative ${
+          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-[0_12px_32px_rgba(59,130,246,0.35)] border-2 transition-all cursor-pointer relative overflow-hidden ${
             isOpen 
               ? 'bg-slate-900 border-slate-700 text-white shadow-slate-900/40' 
-              : 'bg-amber-100/90 hover:bg-amber-100 border-amber-300/80 shadow-amber-900/20'
+              : 'border-white bg-[#8CB5FF] p-0'
           }`}
           aria-label="Open support and AI assistant chat"
           title="Chat with TBO Support & SmartStock AI"
@@ -169,44 +169,11 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
           {isOpen ? (
             <X className="w-6 h-6 stroke-[2.5] text-white" />
           ) : (
-            /* 🧸 Cute Teddy Bear SVG Face */
-            <svg 
-              viewBox="0 0 100 100" 
-              className="w-10 h-10 sm:w-11 sm:h-11 drop-shadow-xs"
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Left Ear */}
-              <circle cx="24" cy="28" r="16" fill="#A76D43" />
-              <circle cx="24" cy="28" r="9" fill="#E8B490" />
-              
-              {/* Right Ear */}
-              <circle cx="76" cy="28" r="16" fill="#A76D43" />
-              <circle cx="76" cy="28" r="9" fill="#E8B490" />
-              
-              {/* Head Base */}
-              <circle cx="50" cy="54" r="36" fill="#C28555" />
-              
-              {/* Cute Cheek Blushes */}
-              <ellipse cx="28" cy="62" rx="7" ry="4" fill="#F8A5A5" opacity="0.6" />
-              <ellipse cx="72" cy="62" rx="7" ry="4" fill="#F8A5A5" opacity="0.6" />
-              
-              {/* Eyes */}
-              <circle cx="36" cy="48" r="4.5" fill="#261A13" />
-              <circle cx="34.5" cy="46" r="1.8" fill="#FFFFFF" />
-              
-              <circle cx="64" cy="48" r="4.5" fill="#261A13" />
-              <circle cx="62.5" cy="46" r="1.8" fill="#FFFFFF" />
-              
-              {/* Snout Muzzle */}
-              <ellipse cx="50" cy="64" rx="15" ry="12" fill="#F5D0B5" />
-              
-              {/* Cute Triangle Nose */}
-              <path d="M46 59 C46 59, 50 63, 54 59 C54 62, 50 65, 46 59 Z" fill="#3D2314" />
-              
-              {/* Smiling Mouth */}
-              <path d="M46 66 Q50 70 54 66" stroke="#3D2314" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <img 
+              src="/chatbot-avatar.png" 
+              alt="AI Assistant" 
+              className="w-full h-full object-cover select-none pointer-events-none drop-shadow-xs" 
+            />
           )}
         </motion.button>
       </div>
