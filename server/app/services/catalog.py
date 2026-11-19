@@ -1,5 +1,7 @@
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from server.app.services.live_hotel_service import fetch_live_hotels_from_api
+from server.app.core.config import is_hotel_api_configured
 
 # Curated seed catalog for offline / prototype operation before live API keys are provided.
 # When live API keys (e.g. AMADEUS_API_KEY, MAPBOX_TOKEN) are set in environment,
@@ -298,7 +300,29 @@ SEED_DESTINATIONS = [
 def get_destinations_catalog():
     return [{"id": d["id"], "name": d["name"], "country": d["country"], "center": d["center"]} for d in SEED_DESTINATIONS]
 
-def get_candidates_for_query(location: str, category: str = "All Hotels", target_type: str = "hotels") -> List[Dict[str, Any]]:
+def get_candidates_for_query(
+    location: str, 
+    category: str = "All Hotels", 
+    target_type: str = "hotels",
+    checkin_date: Optional[str] = None,
+    checkout_date: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    # 1. Real-Time Hotel API Integration (Active when HOTEL_API_KEY is supplied in .env)
+    if target_type == "hotels" and is_hotel_api_configured():
+        live_hotels = fetch_live_hotels_from_api(
+            location=location,
+            checkin_date=checkin_date,
+            checkout_date=checkout_date,
+            category=category
+        )
+        if live_hotels:
+            filtered = [
+                h for h in live_hotels
+                if category in ["All Hotels", "All Flights", "All"] or h["category"] == category
+            ]
+            return filtered if filtered else live_hotels
+
+    # 2. Curated Base Catalog (Used when HOTEL_API_KEY is awaiting user key in .env)
     loc_lower = location.lower()
     matched_dest = None
     for dest in SEED_DESTINATIONS:

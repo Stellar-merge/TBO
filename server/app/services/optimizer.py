@@ -123,18 +123,41 @@ def solve_inventory_allocation(
     # Hard Budget Constraint: sum(x_i * wholesale) <= total_budget
     prob += pulp.lpSum([x_vars[i] * item["wholesale"] for i, item in enumerate(processed_items)]) <= total_budget
     
-    # Solve MILP
-    prob.solve(pulp.PULP_CBC_CMD(msg=False))
-    
+    # Solve MILP with fallback to bounded greedy knapsack for OS robustness
+    solved_by_milp = False
+    try:
+        prob.solve(pulp.PULP_CBC_CMD(msg=False))
+        if any(x_vars[i].varValue is not None for i in range(len(processed_items))):
+            solved_by_milp = True
+    except Exception as e:
+        logger.warning(f"PuLP CBC solver unavailable or failed ({e}); switching to bounded Knapsack optimizer.")
+
     # Collect results
     final_items: List[InventoryItem] = []
     total_deployed = 0.0
     total_expected_revenue = 0.0
     total_expected_profit = 0.0
     total_units = 0
-    
+
+    if not solved_by_milp:
+        # Robust Greedy Knapsack fallback: sort by return density (unit_margin / wholesale)
+        remaining_budget = total_budget
+        sorted_indices = sorted(
+            range(len(processed_items)),
+            key=lambda idx: (processed_items[idx]["unit_margin"] / max(processed_items[idx]["wholesale"], 1.0)),
+            reverse=True
+        )
+        allocated_map = {i: 0 for i in range(len(processed_items))}
+        for idx in sorted_indices:
+            item = processed_items[idx]
+            max_can_buy = min(item["q_star"], int(remaining_budget // item["wholesale"]))
+            allocated_map[idx] = max(0, max_can_buy)
+            remaining_budget -= allocated_map[idx] * item["wholesale"]
+    else:
+        allocated_map = {i: int(x_vars[i].varValue or 0) for i in range(len(processed_items))}
+
     for i, item in enumerate(processed_items):
-        allocated_qty = int(x_vars[i].varValue or 0)
+        allocated_qty = allocated_map[i]
         # Guarantee minimum feasible tranche if budget permits
         if allocated_qty == 0 and (total_deployed + item["wholesale"] * 6) <= total_budget:
             allocated_qty = 6

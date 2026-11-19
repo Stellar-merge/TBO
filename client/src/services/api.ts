@@ -66,6 +66,9 @@ export interface PortfolioSummary {
   cvar: number;
   totalAllocatedUnits: number;
   activeCandidatesCount: number;
+  isLiveData?: boolean;
+  liveSource?: string;
+  apiKeyConfigured?: boolean;
 }
 
 export interface MonteCarloPoint {
@@ -92,6 +95,24 @@ export interface OptimizationResponse {
 }
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
+
+export interface HotelApiStatusResponse {
+  apiKeyConfigured: boolean;
+  provider: string;
+  host: string;
+  status: 'ready' | 'awaiting_key';
+  instructions: string;
+}
+
+export async function checkHotelApiStatus(): Promise<HotelApiStatusResponse | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/hotel-api-status`, { method: 'GET' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
 
 export async function checkBackendHealth(): Promise<{ status: string; modelsLoaded: Record<string, boolean> } | null> {
   try {

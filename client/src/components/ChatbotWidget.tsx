@@ -6,14 +6,15 @@ import {
   Mic, 
   Paperclip, 
   Send, 
-  GripHorizontal, 
-  Sparkles, 
   ChevronDown, 
-  BarChart3, 
-  Building2, 
-  Plane, 
-  Headphones, 
-  CornerDownLeft
+  ImageIcon, 
+  BarChart2, 
+  Sparkles, 
+  FileText, 
+  PenTool, 
+  LayoutGrid,
+  Command,
+  Headphones
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -21,7 +22,6 @@ interface ChatMessage {
   sender: 'user' | 'bot' | 'support';
   text: string;
   timestamp: string;
-  actions?: { label: string; action: string }[];
 }
 
 interface ChatbotWidgetProps {
@@ -31,7 +31,7 @@ interface ChatbotWidgetProps {
 
 export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   activeAssetClass = 'hotels',
-  currentDestination = 'Bali, Indonesia'
+  currentDestination = 'Dubai, UAE'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -48,16 +48,48 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
-      setTimeout(() => inputRef.current?.focus(), 200);
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
   }, [isOpen, messages, isTyping]);
 
-  // Suggested Prompts (Matching reference design)
+  // Exact 6 Suggested Prompt Pills from Reference Image (media_1795110812740_0cb48d87.png)
   const quickPrompts = [
-    { label: 'Analyze data', icon: BarChart3, color: 'text-blue-600', query: `Analyze wholesale demand pacing for ${currentDestination}` },
-    { label: activeAssetClass === 'flights' ? 'Check flight risk' : 'Review hotel Q*', icon: activeAssetClass === 'flights' ? Plane : Building2, color: 'text-emerald-600', query: activeAssetClass === 'flights' ? 'Check Model 3 flight cancellation risks for upcoming routes' : 'What is the optimal Newsvendor Q* allocation for top luxury resorts?' },
-    { label: 'Model explanation', icon: Sparkles, color: 'text-purple-600', query: 'Explain TreeSHAP reason factors behind recommended allocations' },
-    { label: 'Talk to support', icon: Headphones, color: 'text-amber-600', query: 'Connect me with a TBO Inventory Support Specialist' },
+    { 
+      label: 'Create image', 
+      icon: ImageIcon, 
+      color: 'text-emerald-600 bg-emerald-50 border-emerald-100', 
+      query: `Generate visual distribution model for ${currentDestination} inventory allocation` 
+    },
+    { 
+      label: 'Analyze data', 
+      icon: BarChart2, 
+      color: 'text-blue-600 bg-blue-50 border-blue-100', 
+      query: `Analyze wholesale demand pacing and revenue potential for ${currentDestination}` 
+    },
+    { 
+      label: 'Make a plan', 
+      icon: Sparkles, 
+      color: 'text-purple-600 bg-purple-50 border-purple-100', 
+      query: `Make an optimal procurement plan under the $500,000 budget cap` 
+    },
+    { 
+      label: 'Summarize text', 
+      icon: FileText, 
+      color: 'text-pink-600 bg-pink-50 border-pink-100', 
+      query: `Summarize wholesale supplier cancellation rules and Newsvendor fractiles` 
+    },
+    { 
+      label: 'Help me write', 
+      icon: PenTool, 
+      color: 'text-orange-600 bg-orange-50 border-orange-100', 
+      query: `Help me write an inventory commitment request for top recommended hotels` 
+    },
+    { 
+      label: 'More', 
+      icon: LayoutGrid, 
+      color: 'text-slate-600 bg-slate-100 border-slate-200', 
+      query: `Connect me with TBO Inventory Support Desk or show TreeSHAP factor cards` 
+    },
   ];
 
   // Send Message Handler
@@ -81,30 +113,32 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
       let replyText = '';
       const q = query.toLowerCase();
 
-      if (q.includes('support') || q.includes('specialist') || q.includes('team') || q.includes('talk')) {
-        replyText = `Connecting you to TBO Wholesale Support Team... 🎧\n\nAgent Michael from Inventory Operations has joined the chat: "Hello! I am reviewing your active ${activeAssetClass} allocations in ${currentDestination}. How can our desk assist with supplier contracts or custom budget overrides?"`;
-      } else if (q.includes('flight') || q.includes('cancel')) {
-        replyText = `✈️ Model 3 (XGBoost Flight Cancellation Engine) reports a low 3.8% cancellation risk across Bali & direct route sectors. Our LightGBM models forecast steady demand with P50 median pacing at 52 seats/day.`;
+      if (q.includes('support') || q.includes('specialist') || q.includes('team') || q.includes('desk') || q.includes('connect')) {
+        replyText = `Connecting you to TBO Inventory Support Desk... 🎧\n\nAgent Michael (Wholesale Desk): "Hello Amélie! I am currently monitoring live ${activeAssetClass} commitments for ${currentDestination}. Would you like assistance reviewing your budget allocations or adjusting supplier contract parameters?"`;
+      } else if (q.includes('image') || q.includes('visual')) {
+        replyText = `🎨 Rendering portfolio distribution graph: Generating multi-tier quantile demand charts (P10, P50, P90) and real-time category distribution for ${currentDestination}.`;
+      } else if (q.includes('plan') || q.includes('procurement') || q.includes('budget')) {
+        replyText = `📋 Procurement Plan Generated:\n• Total Budget: $500,000\n• Algorithm: PuLP MILP Solver + Newsvendor Q* Sizing\n• Optimization Target: Maximize expected net profit under hard capital ceiling.\n• 15 verified properties selected with average margin of 25.8%.`;
+      } else if (q.includes('summarize') || q.includes('cancellation') || q.includes('terms')) {
+        replyText = `📄 Contract & Risk Summary:\n• Calibrated Cancellation Risk: 18.2% median across active allotments\n• Critical Fractile (CF): 0.74 calculated via (Price - Wholesale) / (Price - Salvage)\n• Downside Risk Buffer: Fully covered by Isotonic Regression Platt scaling.`;
+      } else if (q.includes('write') || q.includes('order') || q.includes('commitment')) {
+        replyText = `✍️ Draft Wholesale Commitment Order:\n\n"To: Supplier Allotment Desk\nSubject: Pre-Purchase Commitment Allotment - ${currentDestination}\n\nWe hereby confirm allocation of wholesale blocks per TBO SmartStock AI MILP optimization under Q4 portfolio guidelines. Please confirm rate locks."`;
       } else if (q.includes('analyze') || q.includes('data') || q.includes('pacing')) {
-        replyText = `📊 Analysis for ${currentDestination}: Wholesale pre-buy commitments are currently yielding a +24.8% projected ROI. Model 5 classifies the portfolio as BALANCED with a 92% demand confidence score.`;
-      } else if (q.includes('q*') || q.includes('newsvendor') || q.includes('allocation')) {
-        replyText = `🏨 Newsvendor sizing (Q*) has dynamically solved critical fractile CF = (P - C)/(P - S). Allocations are capped strictly under your $500,000 budget cap using the PuLP MILP solver.`;
-      } else if (q.includes('shap') || q.includes('reason') || q.includes('model')) {
-        replyText = `✨ TreeSHAP attribution highlights: Search Intent Velocity (+42.5%), Wholesale Discount Buffer (+28%), with downside risk protected by Calibrated Probability Isotonic Layers.`;
+        replyText = `📊 Analysis for ${currentDestination}:\nWholesale commitments are currently yielding a +24.8% projected ROI. Model 5 classifies the portfolio as BALANCED with a 92% demand confidence score.`;
       } else {
-        replyText = `I've registered your request regarding ${query}. Our automated optimization engine and human support desk are monitoring your commitments in ${currentDestination}. Would you like to review wholesale batch allotments or adjust your budget cap?`;
+        replyText = `I've registered your request regarding "${query}". Our automated optimization engine and human support desk are continuously tracking your commitments in ${currentDestination}. Let me know if you need to run a simulation or adjust parameters!`;
       }
 
       const botMsg: ChatMessage = {
         id: `bot-${Date.now()}`,
-        sender: q.includes('support') || q.includes('specialist') ? 'support' : 'bot',
+        sender: q.includes('support') || q.includes('specialist') || q.includes('desk') ? 'support' : 'bot',
         text: replyText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
       setMessages((prev) => [...prev, botMsg]);
       setIsTyping(false);
-    }, 900);
+    }, 750);
   };
 
   return (
@@ -113,7 +147,7 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
       <div className="fixed bottom-6 right-6 z-50 select-none">
         
         {/* Subtle Online Pulse Ring */}
-        <span className="absolute -top-1 -right-1 flex h-4 w-4 z-10">
+        <span className="absolute -top-1 -right-1 flex h-4 w-4 z-10 pointer-events-none">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-4 w-4 bg-[#0D4E43] border-2 border-white" />
         </span>
@@ -177,64 +211,81 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
         </motion.button>
       </div>
 
-      {/* ─── 2. Chat Pop-up Window (Exact Replica of Reference Image) ─── */}
+      {/* ─── 2. Chat Pop-up Window (Pixel-Perfect Replica of media_1795110812740_0cb48d87.png) ─── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 320 }}
-            className="fixed bottom-24 right-4 sm:right-6 w-[360px] sm:w-[410px] h-[610px] max-h-[85vh] bg-white rounded-[32px] border border-slate-200/90 shadow-[0_20px_60px_rgba(0,0,0,0.18)] z-50 flex flex-col overflow-hidden text-slate-900 font-sans antialiased select-none"
+            exit={{ opacity: 0, scale: 0.94, y: 16 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 340 }}
+            className="fixed bottom-24 right-4 sm:right-6 w-[355px] sm:w-[395px] h-[610px] max-h-[85vh] bg-white rounded-[32px] border border-slate-200/90 shadow-[0_20px_60px_rgba(0,0,0,0.18)] z-50 flex flex-col overflow-hidden text-slate-900 font-sans antialiased select-none"
           >
-            {/* Top Bar with Grid & Close */}
-            <div className="flex items-center justify-between px-6 pt-5 pb-2 text-slate-400">
+            {/* Top Bar with 3x3 Dot Grid & Close Button */}
+            <div className="flex items-center justify-end gap-2 px-5 pt-4 pb-1 text-slate-400">
+              {/* 3x3 Dot Grid Menu Icon */}
               <button 
                 type="button" 
-                className="hover:text-slate-700 transition-colors cursor-pointer p-1"
+                className="hover:text-slate-700 transition-colors cursor-pointer p-1 rounded-lg hover:bg-slate-100"
                 title="Options"
               >
-                <GripHorizontal className="w-5 h-5" />
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor">
+                  <circle cx="3" cy="3" r="1.5" />
+                  <circle cx="9" cy="3" r="1.5" />
+                  <circle cx="15" cy="3" r="1.5" />
+                  <circle cx="3" cy="9" r="1.5" />
+                  <circle cx="9" cy="9" r="1.5" />
+                  <circle cx="15" cy="9" r="1.5" />
+                  <circle cx="3" cy="15" r="1.5" />
+                  <circle cx="9" cy="15" r="1.5" />
+                  <circle cx="15" cy="15" r="1.5" />
+                </svg>
               </button>
               
+              {/* Close Button */}
               <button 
                 type="button"
                 onClick={() => setIsOpen(false)}
                 className="hover:text-slate-700 transition-colors cursor-pointer p-1 rounded-full hover:bg-slate-100"
                 title="Close chat"
               >
-                <X className="w-4 h-4 stroke-[2.5]" />
+                <X className="w-4 h-4 stroke-[2.4]" />
               </button>
             </div>
 
             {/* Main Chat Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-2 space-y-4">
+            <div className="flex-1 overflow-y-auto px-5 py-2 space-y-4">
               
-              {/* Initial Welcome Hero State (Shown when no active chat messages) */}
+              {/* Initial Welcome Hero State (Matches Reference Image) */}
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center text-center pt-2 pb-4">
+                <div className="flex flex-col items-center text-center pt-1 pb-3">
                   
-                  {/* Glossy Avatar Icon Emblem (Exact match to reference image 3D orb) */}
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-b from-stone-900 to-black shadow-lg flex items-center justify-center p-3 mb-4 ring-4 ring-slate-100">
-                    <div className="w-9 h-9 rounded-full border-2 border-slate-400/60 border-t-white flex items-center justify-center animate-spin" style={{ animationDuration: '4s' }}>
-                      <div className="w-4 h-4 rounded-full bg-white/20" />
+                  {/* Glossy 3D Metallic Orb with Circular Rotating Arrows (Exact Replica) */}
+                  <div className="relative w-16 h-16 rounded-full mb-3 shadow-[0_8px_20px_rgba(0,0,0,0.35)] flex items-center justify-center bg-gradient-to-br from-stone-800 via-neutral-900 to-black ring-1 ring-white/20 overflow-hidden">
+                    {/* Top Specular Light Reflection */}
+                    <div className="absolute top-1 left-2 right-2 h-5 rounded-full bg-gradient-to-b from-white/35 to-transparent blur-[0.5px]" />
+                    
+                    {/* Inner Rotating White Glyph */}
+                    <div className="w-8 h-8 rounded-full border-2 border-white/80 border-t-transparent border-b-white/90 animate-spin flex items-center justify-center" style={{ animationDuration: '6s' }}>
+                      <div className="w-2.5 h-2.5 rounded-full bg-white/40" />
                     </div>
                   </div>
 
-                  <span className="text-slate-500 font-medium text-sm">
-                    Hi Inventory Manager,
+                  {/* Greeting Text */}
+                  <span className="text-slate-500 font-medium text-[15px]">
+                    Hi Amélie,
                   </span>
                   
-                  <h3 className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight mt-1 leading-snug">
+                  <h3 className="text-[22px] sm:text-[23px] font-black text-slate-950 tracking-tight mt-0.5 leading-snug">
                     Welcome back! How can I help?
                   </h3>
 
-                  <p className="text-xs sm:text-[13px] text-slate-500 max-w-[280px] mt-2 leading-relaxed">
+                  <p className="text-[12.5px] text-slate-500 max-w-[270px] mt-1.5 leading-relaxed">
                     I'm here to help you tackle your tasks. Choose from the prompts below or just tell me what you need!
                   </p>
 
-                  {/* Quick Action Prompt Pills (2-column grid matching reference image) */}
-                  <div className="grid grid-cols-2 gap-2 w-full mt-6">
+                  {/* Exact 6 Quick Prompt Pills (media_1795110812740_0cb48d87.png 2-Row / 3-Col Grid) */}
+                  <div className="grid grid-cols-3 gap-1.5 w-full mt-5">
                     {quickPrompts.map((p) => {
                       const IconComponent = p.icon;
                       return (
@@ -242,12 +293,10 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                           key={p.label}
                           type="button"
                           onClick={() => handleSendMessage(p.query)}
-                          className="flex items-center gap-2 p-2.5 rounded-2xl border border-slate-200/90 hover:border-slate-400 hover:bg-slate-50/80 transition-all text-left text-xs font-bold text-slate-800 shadow-2xs group cursor-pointer"
+                          className="flex items-center justify-center gap-1.5 py-2 px-1.5 rounded-2xl border border-slate-200/90 hover:border-slate-400 hover:bg-slate-50/90 transition-all text-xs font-semibold text-slate-800 shadow-2xs group cursor-pointer"
                         >
-                          <div className={`w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform ${p.color}`}>
-                            <IconComponent className="w-3.5 h-3.5" />
-                          </div>
-                          <span className="truncate">{p.label}</span>
+                          <IconComponent className="w-3.5 h-3.5 shrink-0 stroke-[2.2]" />
+                          <span className="text-[11px] truncate">{p.label}</span>
                         </button>
                       );
                     })}
@@ -255,8 +304,8 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
                 </div>
               ) : (
-                /* Chat Conversation Stream */
-                <div className="space-y-3 pt-2">
+                /* Active Chat Stream */
+                <div className="space-y-3 pt-1">
                   {messages.map((m) => (
                     <div 
                       key={m.id} 
@@ -274,7 +323,7 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                         {m.sender === 'support' && (
                           <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-amber-700 mb-1">
                             <Headphones className="w-3 h-3" />
-                            <span>TBO Support Specialist</span>
+                            <span>TBO Wholesale Support</span>
                           </div>
                         )}
                         <p className="whitespace-pre-line">{m.text}</p>
@@ -302,9 +351,9 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
 
             {/* ─── Bottom Input Box (Exact Replica of Reference Image) ─── */}
             <div className="p-4 pt-1 border-t border-slate-100 bg-white">
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-2.5 shadow-xs focus-within:border-slate-400 focus-within:bg-white transition-all">
+              <div className="bg-slate-50/90 border border-slate-200/90 rounded-2xl p-2.5 shadow-xs focus-within:border-slate-400 focus-within:bg-white transition-all">
                 
-                {/* Input Row */}
+                {/* Input Row: Magnifying Glass + Text Input + Mic / Send */}
                 <div className="flex items-center gap-2 px-1">
                   <Search className="w-4 h-4 text-slate-400 shrink-0" />
                   <input
@@ -339,12 +388,12 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                 </div>
 
                 {/* Sub-bar inside input box: "UUI v6.0 ⌄" and "Shortcuts", "Attach" */}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200/50 px-1 text-[11px] text-slate-500 font-medium select-none">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-200/60 px-1 text-[11px] text-slate-500 font-medium select-none">
                   <button 
                     type="button"
                     className="flex items-center gap-1 hover:text-slate-800 transition-colors cursor-pointer"
                   >
-                    <span>SmartStock AI v2.0</span>
+                    <span>UUI v6.0</span>
                     <ChevronDown className="w-3 h-3 text-slate-400" />
                   </button>
 
@@ -354,17 +403,17 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
                       onClick={() => handleSendMessage('Help me review my current wholesale commitments')}
                       className="flex items-center gap-1 hover:text-slate-800 transition-colors cursor-pointer"
                     >
-                      <CornerDownLeft className="w-3 h-3 text-slate-400" />
-                      <span>Prompts</span>
+                      <Command className="w-3 h-3 text-slate-400" />
+                      <span>Shortcuts</span>
                     </button>
 
                     <button 
                       type="button"
-                      onClick={() => handleSendMessage('Connecting to live support team...')}
+                      onClick={() => handleSendMessage('Connect me to live support specialist')}
                       className="flex items-center gap-1 hover:text-slate-800 transition-colors cursor-pointer"
                     >
                       <Paperclip className="w-3 h-3 text-slate-400" />
-                      <span>Support</span>
+                      <span>Attach</span>
                     </button>
                   </div>
                 </div>

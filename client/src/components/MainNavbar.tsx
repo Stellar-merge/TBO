@@ -67,7 +67,7 @@ export const MainNavbar: React.FC<MainNavbarProps> = ({
           mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
         } ${
           isOverDashboard
-            ? 'bg-white/95 backdrop-blur-xl backdrop-saturate-150 border-b border-stone-200/90 text-stone-900 shadow-xs'
+            ? 'bg-[#F4FAF5]/90 backdrop-blur-xl backdrop-saturate-150 border-b border-[#D2EBD9]/80 text-stone-900 shadow-2xs'
             : 'bg-black/30 backdrop-blur-xl backdrop-saturate-150 border-b border-white/[0.08] text-white'
         }`}
       >

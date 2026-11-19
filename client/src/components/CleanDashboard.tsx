@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, 
   Plane,
@@ -18,7 +19,6 @@ import {
   Crosshair, 
   ExternalLink,
   Calendar,
-  DollarSign,
   ShieldCheck,
   Check,
   Navigation,
@@ -34,41 +34,8 @@ import { initialOpportunities } from '../data/opportunityDeals';
 import type { OpportunityCardItem } from '../data/opportunityDeals';
 import { OpportunityDetailModal } from './OpportunityDetailModal';
 import { ChatbotWidget } from './ChatbotWidget';
+import { BudgetAllocationCard } from './BudgetAllocationCard';
 import { optimizeProcurement } from '../services/api';
-
-/* ─── Smooth Animated Number Hook (Matching Overview counter animations) ─── */
-function useAnimatedNumber(target: number, duration = 1000, trigger = true) {
-  const [val, setVal] = useState(0);
-
-  useEffect(() => {
-    if (!trigger) return;
-    let startTime: number | null = null;
-    let frameId: number;
-
-    const startVal = 0;
-    const diff = target - startVal;
-
-    const step = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const elapsed = timestamp - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // easeOutCubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setVal(Math.round(startVal + diff * eased));
-
-      if (progress < 1) {
-        frameId = requestAnimationFrame(step);
-      } else {
-        setVal(target);
-      }
-    };
-
-    frameId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frameId);
-  }, [target, duration, trigger]);
-
-  return val;
-}
 
 export const CleanDashboard: React.FC = () => {
   // Entrance Animation Trigger (Staggered cinematic entrance matching OverviewHero)
@@ -379,14 +346,11 @@ export const CleanDashboard: React.FC = () => {
   const sortRef = useRef<HTMLDivElement>(null);
   const categoryRef = useRef<HTMLDivElement>(null);
 
-  // Backend & Optimization Engine State
-  const [isBackendOnline, setIsBackendOnline] = useState<boolean>(false);
+  // Optimization Engine State
   const [isOptimizing, setIsOptimizing] = useState<boolean>(false);
   const [budgetUsed, setBudgetUsed] = useState<number>(120000);
   const [backendRoi, setBackendRoi] = useState<string>('24.8');
   const [backendRiskDial, setBackendRiskDial] = useState<number>(42);
-  const budgetTotal = airbnbBudget;
-  const budgetPercentage = Math.min(100, Math.round((budgetUsed / (budgetTotal || 1)) * 100));
 
   // Run Optimization Engine against FastAPI Backend (or fallback gracefully to seed catalog)
   const runOptimization = React.useCallback(async () => {
@@ -402,7 +366,6 @@ export const CleanDashboard: React.FC = () => {
       });
 
       if (res && res.status === 'success') {
-        setIsBackendOnline(true);
         setBudgetUsed(res.summary.allocatedBudget);
         setBackendRoi(res.summary.expectedRoi.toFixed(1));
         setBackendRiskDial(res.summary.riskDialScore);
@@ -447,12 +410,9 @@ export const CleanDashboard: React.FC = () => {
           setItems(mapped);
           setSelectedId(mapped[0].id);
         }
-      } else {
-        setIsBackendOnline(false);
       }
     } catch (e) {
       console.warn('Backend call failed:', e);
-      setIsBackendOnline(false);
     } finally {
       setIsOptimizing(false);
     }
@@ -463,8 +423,8 @@ export const CleanDashboard: React.FC = () => {
     runOptimization();
   }, [runOptimization]);
 
-  // View Mode: 'split' | 'list' | 'map'
-  const [viewMode, setViewMode] = useState<'split' | 'list' | 'map'>('split');
+  // View Mode: 'split' | 'list' | 'map' (List view default as requested)
+  const [viewMode, setViewMode] = useState<'split' | 'list' | 'map'>('list');
 
   // Map zoom and pan state
   const [mapZoom, setMapZoom] = useState<number>(1);
@@ -580,12 +540,6 @@ export const CleanDashboard: React.FC = () => {
 
   const projectedROI = totalAllocated > 0 ? ((totalProfit / totalAllocated) * 100).toFixed(1) : backendRoi;
 
-  // Animated Numbers for Liquidity & Portfolio Strip (Smooth Ease-Out roll matching Overview)
-  const animatedBudgetUsed = useAnimatedNumber(budgetUsed, 1100, dashboardVisible);
-  const animatedRemaining = useAnimatedNumber(Math.max(0, budgetTotal - budgetUsed), 1200, dashboardVisible);
-  const animatedAllocated = useAnimatedNumber(totalAllocated, 1300, dashboardVisible);
-  const animatedPercentage = useAnimatedNumber(budgetPercentage, 1000, dashboardVisible);
-
   // Toggle Bookmark
   const handleToggleBookmark = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -657,58 +611,56 @@ export const CleanDashboard: React.FC = () => {
   ] as const;
 
   return (
-    <div className="w-full min-h-screen bg-[#F8F9FA] text-slate-900 pb-16 font-sans select-none antialiased">
+    <div className="w-full min-h-screen bg-gradient-to-br from-[#F4FAF5] via-[#EBF6EE] to-[#F1F9F3] text-slate-900 pb-16 font-sans select-none antialiased relative overflow-hidden">
       
+      {/* Ambient background soft light glows inspired by Crextio palette */}
+      <div className="absolute top-0 right-1/4 w-[600px] h-[400px] bg-emerald-200/25 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-48 left-10 w-[500px] h-[350px] bg-teal-200/20 blur-[100px] rounded-full pointer-events-none" />
+
       {/* ─── Airbnb-Style Procurement Query Header (Exact replica of user reference image) ─── */}
-      <div className={`bg-[#F8F9FA] border-b border-slate-200/80 pt-6 pb-6 px-4 sm:px-8 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+      <div className={`relative ${activeAirbnbSegment ? 'z-50' : 'z-30'} bg-gradient-to-b from-white/70 via-[#EBF7EF]/50 to-transparent border-b border-[#D2EBD9]/80 pt-6 pb-6 px-4 sm:px-8 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
         dashboardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-5'
       }`}>
-        <div ref={airbnbBarRef} className={`max-w-[960px] mx-auto flex flex-col items-center transition-all duration-700 delay-75 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        <div ref={airbnbBarRef} className={`max-w-[960px] mx-auto flex flex-col items-center relative ${activeAirbnbSegment ? 'z-50' : 'z-30'} transition-all duration-700 delay-75 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           dashboardVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.98]'
         }`}>
           
-          {/* TOP: Category Tabs (Hotels | Flights) with Active Underline */}
-          <div className="flex items-center gap-12 mb-4 select-none">
-            {/* Hotels Tab (Active by default) */}
+          {/* TOP: Category Tabs (Hotels | Flights) Centered with Crextio Contrast Pill Style */}
+          <div className="flex items-center justify-center p-1 bg-[#E4F3E8]/80 border border-[#CCE8D5] rounded-full mb-4 shadow-xs select-none">
+            {/* Hotels Tab */}
             <button
               type="button"
               onClick={() => setActiveAssetClass('hotels')}
-              className={`flex items-center gap-2.5 pb-2.5 font-bold transition-all relative cursor-pointer ${
+              className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition-all cursor-pointer ${
                 activeAssetClass === 'hotels'
-                  ? 'text-slate-950 font-black'
-                  : 'text-slate-400 hover:text-slate-700 font-semibold'
+                  ? 'bg-[#18231E] text-white shadow-[0_2px_10px_rgba(24,35,30,0.25)]'
+                  : 'text-[#2D5A40] hover:text-[#143823] hover:bg-white/50 font-semibold'
               }`}
             >
-              <Building2 className={`w-5 h-5 ${activeAssetClass === 'hotels' ? 'text-slate-950' : 'text-slate-400'}`} />
-              <span className="text-[1.5rem] leading-none tracking-tight">Hotels</span>
-              {activeAssetClass === 'hotels' && (
-                <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#0D4E43] rounded-full" />
-              )}
+              <Building2 className="w-4 h-4 stroke-[2.4]" />
+              <span className="text-sm tracking-tight">Hotels</span>
             </button>
 
             {/* Flights Tab */}
             <button
               type="button"
               onClick={() => setActiveAssetClass('flights')}
-              className={`flex items-center gap-2.5 pb-2.5 font-bold transition-all relative cursor-pointer ${
+              className={`flex items-center gap-2 px-6 py-2 rounded-full font-bold transition-all cursor-pointer ${
                 activeAssetClass === 'flights'
-                  ? 'text-slate-950 font-black'
-                  : 'text-slate-400 hover:text-slate-700 font-semibold'
+                  ? 'bg-[#18231E] text-white shadow-[0_2px_10px_rgba(24,35,30,0.25)]'
+                  : 'text-[#2D5A40] hover:text-[#143823] hover:bg-white/50 font-semibold'
               }`}
             >
-              <Plane className={`w-5 h-5 ${activeAssetClass === 'flights' ? 'text-slate-950' : 'text-slate-400'}`} />
-              <span className="text-[1.5rem] leading-none tracking-tight">Flights</span>
-              {activeAssetClass === 'flights' && (
-                <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#0D4E43] rounded-full" />
-              )}
+              <Plane className="w-4 h-4 stroke-[2.4]" />
+              <span className="text-sm tracking-tight">Flights</span>
             </button>
           </div>
 
           {/* BOTTOM: Airbnb Rounded-Full Pill Search Bar (Enlarged with Direct Typing & Auto-Suggestions) */}
-          <div className={`w-full rounded-full transition-all p-2 sm:p-2.5 min-h-[68px] sm:min-h-[74px] flex items-center relative ${
+          <div className={`w-full rounded-full transition-all p-2 sm:p-2.5 min-h-[68px] sm:min-h-[74px] flex items-center relative ${activeAirbnbSegment ? 'z-50' : 'z-20'} ${
             activeAirbnbSegment 
-              ? 'bg-[#F1F5F9] shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-slate-300' 
-              : 'bg-white border border-slate-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_28px_rgba(0,0,0,0.1)]'
+              ? 'bg-white shadow-[0_8px_32px_rgba(34,139,84,0.14)] border border-[#2E8B57]' 
+              : 'bg-white/95 backdrop-blur-md border border-[#CCE8D5] shadow-[0_8px_30px_rgba(34,139,84,0.06)] hover:shadow-[0_12px_36px_rgba(34,139,84,0.11)] hover:border-[#9ED6B3]'
           }`}>
             
             {/* 1. Budget Segment (Direct Inline Typing) */}
@@ -719,10 +671,10 @@ export const CleanDashboard: React.FC = () => {
               }}
               className={`flex-1 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-left transition-all cursor-pointer ${
                 activeAirbnbSegment === 'budget' 
-                  ? 'bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-[#0D4E43]' 
+                  ? 'bg-white shadow-[0_4px_16px_rgba(34,139,84,0.12)] border border-[#2E8B57]' 
                   : activeAirbnbSegment 
-                    ? 'hover:bg-slate-200/60' 
-                    : 'hover:bg-slate-100/60'
+                    ? 'hover:bg-[#EBF6EE]' 
+                    : 'hover:bg-[#F2FAF4]'
               }`}
             >
               <label className="text-xs sm:text-[14px] font-black text-slate-900 block leading-tight cursor-pointer select-none">
@@ -763,7 +715,7 @@ export const CleanDashboard: React.FC = () => {
             </div>
 
             {/* Vertical Divider 1 */}
-            <div className={`w-[1px] h-7 sm:h-8 bg-slate-200 self-center shrink-0 ${
+            <div className={`w-[1px] h-7 sm:h-8 bg-[#D5EADB] self-center shrink-0 ${
               activeAirbnbSegment === 'budget' || activeAirbnbSegment === 'dates' ? 'opacity-0' : 'opacity-100'
             }`} />
 
@@ -773,10 +725,10 @@ export const CleanDashboard: React.FC = () => {
               onClick={() => setActiveAirbnbSegment(prev => prev === 'dates' ? null : 'dates')}
               className={`flex-1 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-left transition-all cursor-pointer focus:outline-hidden ${
                 activeAirbnbSegment === 'dates' 
-                  ? 'bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-[#0D4E43]' 
+                  ? 'bg-white shadow-[0_4px_16px_rgba(34,139,84,0.12)] border border-[#2E8B57]' 
                   : activeAirbnbSegment 
-                    ? 'hover:bg-slate-200/60' 
-                    : 'hover:bg-slate-100/60'
+                    ? 'hover:bg-[#EBF6EE]' 
+                    : 'hover:bg-[#F2FAF4]'
               }`}
             >
               <span className="text-xs sm:text-[14px] font-black text-slate-900 block leading-tight">Dates</span>
@@ -786,7 +738,7 @@ export const CleanDashboard: React.FC = () => {
             </button>
 
             {/* Vertical Divider 2 */}
-            <div className={`w-[1px] h-7 sm:h-8 bg-slate-200 self-center shrink-0 ${
+            <div className={`w-[1px] h-7 sm:h-8 bg-[#D5EADB] self-center shrink-0 ${
               activeAirbnbSegment === 'dates' || activeAirbnbSegment === 'location' ? 'opacity-0' : 'opacity-100'
             }`} />
 
@@ -798,10 +750,10 @@ export const CleanDashboard: React.FC = () => {
               }}
               className={`flex-1 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-left transition-all cursor-pointer ${
                 activeAirbnbSegment === 'location' 
-                  ? 'bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-[#0D4E43]' 
+                  ? 'bg-white shadow-[0_4px_16px_rgba(34,139,84,0.12)] border border-[#2E8B57]' 
                   : activeAirbnbSegment 
-                    ? 'hover:bg-slate-200/60' 
-                    : 'hover:bg-slate-100/60'
+                    ? 'hover:bg-[#EBF6EE]' 
+                    : 'hover:bg-[#F2FAF4]'
               }`}
             >
               <label className="text-xs sm:text-[14px] font-black text-slate-900 block leading-tight cursor-pointer select-none">
@@ -849,7 +801,7 @@ export const CleanDashboard: React.FC = () => {
             </div>
 
             {/* Vertical Divider 3 */}
-            <div className={`w-[1px] h-7 sm:h-8 bg-slate-200 self-center shrink-0 ${
+            <div className={`w-[1px] h-7 sm:h-8 bg-[#D5EADB] self-center shrink-0 ${
               activeAirbnbSegment === 'location' || activeAirbnbSegment === 'risk' ? 'opacity-0' : 'opacity-100'
             }`} />
 
@@ -859,10 +811,10 @@ export const CleanDashboard: React.FC = () => {
               onClick={() => setActiveAirbnbSegment(prev => prev === 'risk' ? null : 'risk')}
               className={`flex-1 px-5 sm:px-7 py-2.5 sm:py-3 rounded-full text-left transition-all cursor-pointer focus:outline-hidden ${
                 activeAirbnbSegment === 'risk' 
-                  ? 'bg-white shadow-[0_4px_16px_rgba(0,0,0,0.1)] border border-[#0D4E43]' 
+                  ? 'bg-white shadow-[0_4px_16px_rgba(34,139,84,0.12)] border border-[#2E8B57]' 
                   : activeAirbnbSegment 
-                    ? 'hover:bg-slate-200/60' 
-                    : 'hover:bg-slate-100/60'
+                    ? 'hover:bg-[#EBF6EE]' 
+                    : 'hover:bg-[#F2FAF4]'
               }`}
             >
               <span className="text-xs sm:text-[14px] font-black text-slate-900 block leading-tight">Risk Tolerance</span>
@@ -871,7 +823,7 @@ export const CleanDashboard: React.FC = () => {
               </span>
             </button>
 
-            {/* Far Right: Dark Emerald Search Action Button (Signature Theme) */}
+            {/* Far Right: Crextio Gradient Emerald Action Button */}
             <button
               type="button"
               onClick={() => {
@@ -880,7 +832,7 @@ export const CleanDashboard: React.FC = () => {
                 setPopupVisible(true);
               }}
               disabled={isOptimizing}
-              className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-[#0D4E43] hover:bg-[#09352e] active:scale-95 text-white flex items-center justify-center shrink-0 shadow-md hover:shadow-lg transition-all cursor-pointer ml-2 mr-1 disabled:opacity-80"
+              className="w-12 h-12 sm:w-13 sm:h-13 rounded-full bg-gradient-to-br from-[#2E8B57] via-[#237A49] to-[#155A34] hover:from-[#349D63] hover:to-[#1B6F40] active:scale-95 text-white flex items-center justify-center shrink-0 shadow-[0_6px_20px_rgba(36,122,74,0.35)] hover:shadow-[0_8px_24px_rgba(36,122,74,0.45)] transition-all cursor-pointer ml-2 mr-1 disabled:opacity-80"
               aria-label="Search and run engine"
               title="Search and run engine"
             >
@@ -892,42 +844,57 @@ export const CleanDashboard: React.FC = () => {
             </button>
 
             {/* ─── 1. Budget Popover (Clean Airbnb Pills Matching Dates Flexibility Style) ─── */}
-            {activeAirbnbSegment === 'budget' && (
-              <div className="absolute top-full left-0 mt-3 w-88 bg-white rounded-[32px] shadow-[0_12px_36px_rgba(0,0,0,0.16)] border border-stone-200/90 p-6 z-50 text-left animate-scale-in">
-                <div className="flex items-center justify-between mb-3 px-1">
-                  <span className="text-xs font-bold text-stone-900 tracking-tight">
-                    Suggested budgets
-                  </span>
-                  <span className="text-[11px] text-stone-400 font-medium">
-                    Max capital cap ($B)
-                  </span>
-                </div>
+            <AnimatePresence>
+              {activeAirbnbSegment === 'budget' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute top-full left-0 mt-3 w-88 bg-white rounded-[32px] shadow-[0_24px_60px_rgba(0,0,0,0.18)] border border-stone-200/90 p-6 z-50 text-left origin-top-left"
+                >
+                  <div className="flex items-center justify-between mb-3 px-1">
+                    <span className="text-xs font-bold text-stone-900 tracking-tight">
+                      Suggested budgets
+                    </span>
+                    <span className="text-[11px] text-stone-400 font-medium">
+                      Max capital cap ($B)
+                    </span>
+                  </div>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                  {[100000, 250000, 500000, 1000000, 2500000].map((val) => (
-                    <button
-                      key={val}
-                      type="button"
-                      onClick={() => {
-                        handleBudgetChange(val);
-                        setActiveAirbnbSegment('dates');
-                      }}
-                      className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-                        airbnbBudget === val
-                          ? 'border border-stone-900 text-stone-900 font-bold bg-stone-50 shadow-xs'
-                          : 'border border-stone-200 hover:border-stone-400 text-stone-700 hover:bg-stone-50'
-                      }`}
-                    >
-                      ${val >= 1000000 ? `${val / 1000000}M` : `${val / 1000}K`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {[100000, 250000, 500000, 1000000, 2500000].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => {
+                          handleBudgetChange(val);
+                          setActiveAirbnbSegment('dates');
+                        }}
+                        className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                          airbnbBudget === val
+                            ? 'border border-stone-900 text-stone-900 font-bold bg-stone-50 shadow-xs'
+                            : 'border border-stone-200 hover:border-stone-400 text-stone-700 hover:bg-stone-50'
+                        }`}
+                      >
+                        ${val >= 1000000 ? `${val / 1000000}M` : `${val / 1000}K`}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* ─── 2. Dates Popover (Exact Replica of Airbnb media_1795074622760_548e40f6.png) ─── */}
-            {activeAirbnbSegment === 'dates' && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-[720px] max-w-[95vw] bg-white rounded-[32px] shadow-[0_12px_36px_rgba(0,0,0,0.16)] border border-stone-200/90 p-7 z-50 text-left animate-scale-in">
+            <AnimatePresence>
+              {activeAirbnbSegment === 'dates' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.98, x: '-50%' }}
+                  animate={{ opacity: 1, y: 0, scale: 1, x: '-50%' }}
+                  exit={{ opacity: 0, y: 8, scale: 0.98, x: '-50%' }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute top-full left-1/2 mt-3 w-[720px] max-w-[95vw] bg-white rounded-[32px] shadow-[0_24px_60px_rgba(0,0,0,0.18)] border border-stone-200/90 p-7 z-50 text-left origin-top"
+                >
                 
                 {/* Top Segmented Pill Toggle: [ Dates | Flexible ] */}
                 <div className="bg-[#f0ece5] p-1 rounded-full flex items-center justify-center w-fit mx-auto mb-6">
@@ -1040,12 +1007,20 @@ export const CleanDashboard: React.FC = () => {
                   </div>
                 )}
 
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* ─── 3. Location Popover (Exact Replica of Airbnb with Live Auto-Suggestions) ─── */}
-            {activeAirbnbSegment === 'location' && (
-              <div className="absolute top-full left-1/3 -translate-x-1/3 mt-3 w-[460px] max-w-[95vw] bg-white rounded-[32px] shadow-[0_12px_36px_rgba(0,0,0,0.16)] border border-stone-200/90 p-6 z-50 text-left animate-scale-in">
+            <AnimatePresence>
+              {activeAirbnbSegment === 'location' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.98, x: '-33%' }}
+                  animate={{ opacity: 1, y: 0, scale: 1, x: '-33%' }}
+                  exit={{ opacity: 0, y: 8, scale: 0.98, x: '-33%' }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute top-full left-1/3 mt-3 w-[460px] max-w-[95vw] bg-white rounded-[32px] shadow-[0_24px_60px_rgba(0,0,0,0.18)] border border-stone-200/90 p-6 z-50 text-left origin-top"
+                >
                 <div className="flex items-center justify-between mb-3 px-1">
                   <span className="text-xs font-bold text-stone-900 tracking-tight">
                     {airbnbLocation.trim() && airbnbLocation !== 'Nearby' && airbnbLocation !== 'All Destinations'
@@ -1109,12 +1084,20 @@ export const CleanDashboard: React.FC = () => {
                     </button>
                   )}
                 </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* ─── 4. Risk Tolerance Popover (Matching Location & Dates Design & Typography) ─── */}
-            {activeAirbnbSegment === 'risk' && (
-              <div className="absolute top-full right-0 mt-3 w-[460px] max-w-[95vw] bg-white rounded-[32px] shadow-[0_12px_36px_rgba(0,0,0,0.16)] border border-stone-200/90 p-6 z-50 text-left animate-scale-in">
+            <AnimatePresence>
+              {activeAirbnbSegment === 'risk' && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute top-full right-0 mt-3 w-[460px] max-w-[95vw] bg-white rounded-[32px] shadow-[0_24px_60px_rgba(0,0,0,0.18)] border border-stone-200/90 p-6 z-50 text-left origin-top-right"
+                >
                 <div className="flex items-center justify-between mb-3 px-1">
                   <span className="text-xs font-bold text-stone-900 tracking-tight">
                     Select risk tolerance
@@ -1177,8 +1160,9 @@ export const CleanDashboard: React.FC = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
           </div>
 
@@ -1186,79 +1170,19 @@ export const CleanDashboard: React.FC = () => {
       </div>
 
       {/* ─── Main Content Container ─── */}
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 pt-5 space-y-4">
+      <div className="relative z-10 max-w-[1440px] mx-auto px-4 sm:px-8 pt-5 space-y-4">
         
-        {/* ─── Wholesale Capital Liquidity & Portfolio Bar (Valuable Revenue Management Strip) ─── */}
-        <div className={`bg-white rounded-2xl p-4 sm:px-6 sm:py-4 border border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-700 delay-100 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        {/* ─── Exact Redesigned Budget Allocation Component (Replica of media_1795114216608_4a18ecae.jpg) ─── */}
+        <div className={`transition-all duration-700 delay-100 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           dashboardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
         }`}>
-          
-          {/* Left: Indicator & Budget Used Display */}
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-[#0D4E43] text-emerald-100 flex items-center justify-center shrink-0 shadow-xs">
-              <DollarSign className="w-5 h-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
-                  Budget Used: <strong className="font-black font-mono text-slate-950 text-base sm:text-lg">${animatedBudgetUsed.toLocaleString()}</strong> / <span className="font-mono text-slate-500 font-bold">${budgetTotal.toLocaleString()}</span>
-                </span>
-                <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#0D4E43] border border-emerald-300/80 font-mono">
-                  {animatedPercentage}% Deployed
-                </span>
-                <span className={`inline-flex items-center gap-1.5 text-xs font-black px-2.5 py-0.5 rounded-full border ${
-                  isBackendOnline 
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                    : 'bg-slate-100 text-slate-700 border-slate-200'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${isBackendOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                  {isBackendOnline ? 'FastAPI ML Engine Online' : 'Seed Catalog Standby'}
-                </span>
-              </div>
-              <span className="text-xs sm:text-sm text-slate-600 font-semibold">
-                ${animatedRemaining.toLocaleString()} remaining liquidity for pre-buy commitments
-              </span>
-            </div>
-          </div>
-
-          {/* Center / Right: Progress Bar & Portfolio Metrics */}
-          <div className="flex items-center gap-6 flex-1 max-w-xl justify-end">
-            <div className="flex items-center gap-3 flex-1 max-w-xs">
-              <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60 p-0.5">
-                <div 
-                  className="h-full bg-[#0D4E43] rounded-full transition-all duration-700 ease-spring"
-                  style={{ width: `${animatedPercentage}%` }}
-                />
-              </div>
-              <span className="text-xs font-bold text-slate-600 whitespace-nowrap hidden sm:inline">
-                Hard Cap
-              </span>
-            </div>
-
-            <div className="h-7 w-[1px] bg-slate-200 hidden md:block" />
-
-            <div className="hidden md:flex items-center gap-5 text-sm font-semibold">
-              <div>
-                <span className="text-slate-400 block text-[11px] uppercase font-black tracking-wider">Capital Allocated</span>
-                <span className="font-mono font-black text-slate-950 text-base sm:text-lg">${animatedAllocated.toLocaleString()}</span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[11px] uppercase font-black tracking-wider">Projected ROI</span>
-                <span className="inline-flex items-center gap-0.5 text-emerald-800 font-black font-mono text-sm sm:text-base">
-                  <TrendingUp className="w-4 h-4 text-emerald-700 stroke-[2.5]" />
-                  +{projectedROI}%
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[11px] uppercase font-black tracking-wider">Risk Dial</span>
-                <span className="inline-flex items-center gap-1 font-mono font-black text-slate-950 text-base sm:text-lg">
-                  <ShieldCheck className="w-4 h-4 text-[#0D4E43]" />
-                  {backendRiskDial}/100
-                </span>
-              </div>
-            </div>
-          </div>
-
+          <BudgetAllocationCard
+            budgetUsed={budgetUsed}
+            budgetTotal={airbnbBudget}
+            capitalAllocated={2043610}
+            projectedROI={projectedROI || '16.1'}
+            riskDial={backendRiskDial || 42}
+          />
         </div>
 
         {/* ─── Results Header & Dismissable Active Constraint Tags (Image 2 Replica) ─── */}
@@ -1274,7 +1198,7 @@ export const CleanDashboard: React.FC = () => {
             </div>
 
             {/* Sort by dropdown */}
-            <div ref={sortRef} className="relative self-start sm:self-auto">
+            <div ref={sortRef} className="relative self-start sm:self-auto z-30">
               <button
                 type="button"
                 onClick={() => setIsSortOpen(!isSortOpen)}
@@ -1287,36 +1211,44 @@ export const CleanDashboard: React.FC = () => {
                 <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
 
-              {isSortOpen && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-200/90 p-1.5 z-40 animate-scale-in">
-                  <span className="text-[11px] font-black text-slate-400 uppercase px-3 py-1.5 block tracking-wider">
-                    Sort Opportunities
-                  </span>
-                  {sortByOptions.map((opt) => (
-                    <button
-                      key={opt.id}
-                      type="button"
-                      onClick={() => {
-                        setSortBy(opt.id);
-                        setIsSortOpen(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs sm:text-sm transition-colors flex items-center justify-between cursor-pointer ${
-                        sortBy === opt.id ? 'bg-slate-100 font-black text-slate-950' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950 font-semibold'
-                      }`}
-                    >
-                      <span>{opt.label}</span>
-                      {sortBy === opt.id && <Check className="w-4 h-4 text-[#0D4E43] stroke-[2.5]" />}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <AnimatePresence>
+                {isSortOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                    transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 z-50 origin-top-right"
+                  >
+                    <span className="text-[11px] font-black text-slate-400 uppercase px-3 py-1.5 block tracking-wider">
+                      Sort Opportunities
+                    </span>
+                    {sortByOptions.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          setSortBy(opt.id);
+                          setIsSortOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs sm:text-sm transition-colors flex items-center justify-between cursor-pointer ${
+                          sortBy === opt.id ? 'bg-slate-100 font-black text-slate-950' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950 font-semibold'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {sortBy === opt.id && <Check className="w-4 h-4 text-[#0D4E43] stroke-[2.5]" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
           {/* Dismissable Active Filter Tags Row (Replicating Image 2 tags: [ Villa, Bungalow ✕ ] etc.) */}
           <div className="flex flex-wrap items-center gap-2 pb-2">
             {/* Tag 1: Active Category / Allotment */}
-            <span className="bg-white border border-slate-200/90 text-slate-800 text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-xs">
+            <span className="bg-white/90 backdrop-blur-xs border border-[#CCE8D5] text-[#16452B] text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs hover:border-[#9ED6B3] transition-all">
               <span>{activeCategory === 'All' ? 'Wholesale Allotments' : activeCategory}</span>
               {activeCategory !== 'All' && (
                 <button
@@ -1334,10 +1266,10 @@ export const CleanDashboard: React.FC = () => {
             <button
               type="button"
               onClick={() => setMinMarginFilter(!minMarginFilter)}
-              className={`text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full border transition-all flex items-center gap-1.5 shadow-xs cursor-pointer ${
+              className={`text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
                 minMarginFilter
-                  ? 'bg-slate-950 text-white border-slate-950'
-                  : 'bg-white text-slate-800 border-slate-200/90 hover:border-slate-300'
+                  ? 'bg-[#18231E] text-white border-[#18231E] shadow-[0_2px_8px_rgba(24,35,30,0.25)]'
+                  : 'bg-white/90 backdrop-blur-xs text-[#16452B] border-[#CCE8D5] hover:border-[#9ED6B3] shadow-2xs'
               }`}
             >
               <span>Min. 20% Net Margin</span>
@@ -1347,7 +1279,7 @@ export const CleanDashboard: React.FC = () => {
             </button>
 
             {/* Tag 3: Budget Constraint Tag */}
-            <span className="bg-white border border-slate-200/90 text-slate-800 text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-xs">
+            <span className="bg-white/90 backdrop-blur-xs border border-[#CCE8D5] text-[#16452B] text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs hover:border-[#9ED6B3] transition-all">
               <span>Budget: &lt; ${(airbnbBudget / 1000).toLocaleString()}k</span>
               {airbnbBudget !== 500000 && (
                 <button
@@ -1365,7 +1297,7 @@ export const CleanDashboard: React.FC = () => {
             </span>
 
             {/* Tag 4: Risk Strategy Tag */}
-            <span className="bg-white border border-slate-200/90 text-slate-800 text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-xs">
+            <span className="bg-white/90 backdrop-blur-xs border border-[#CCE8D5] text-[#16452B] text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs hover:border-[#9ED6B3] transition-all">
               <span>{airbnbRisk} Risk Strategy</span>
               {airbnbRisk !== 'Moderate' && (
                 <button
@@ -1381,8 +1313,8 @@ export const CleanDashboard: React.FC = () => {
 
             {/* Tag 5: Location Tag */}
             {airbnbLocation && airbnbLocation !== 'Nearby' && (
-              <span className="bg-white border border-slate-200/90 text-slate-800 text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-xs">
-                <MapPin className="w-3.5 h-3.5 text-slate-500" />
+              <span className="bg-white/90 backdrop-blur-xs border border-[#CCE8D5] text-[#16452B] text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs hover:border-[#9ED6B3] transition-all">
+                <MapPin className="w-3.5 h-3.5 text-[#247A49]" />
                 <span>{airbnbLocation}</span>
                 <button
                   type="button"
@@ -1396,8 +1328,8 @@ export const CleanDashboard: React.FC = () => {
             )}
 
             {/* Tag 6: Dates / Horizon Tag */}
-            <span className="bg-white border border-slate-200/90 text-slate-800 text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-xs">
-              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+            <span className="bg-white/90 backdrop-blur-xs border border-[#CCE8D5] text-[#16452B] text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs hover:border-[#9ED6B3] transition-all">
+              <Calendar className="w-3.5 h-3.5 text-[#247A49]" />
               <span>{formatDatesDisplay(airbnbStartDate, airbnbEndDate)}</span>
               {(airbnbStartDate !== '2026-11-19' || airbnbEndDate !== '2026-11-25') && (
                 <button
@@ -1418,7 +1350,7 @@ export const CleanDashboard: React.FC = () => {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="text-xs sm:text-[13px] text-slate-500 hover:text-slate-950 underline font-bold ml-2 cursor-pointer transition-colors"
+              className="text-xs sm:text-[13px] text-[#247A49] hover:text-[#14472A] underline font-bold ml-2 cursor-pointer transition-colors"
             >
               Reset all
             </button>
@@ -1430,13 +1362,13 @@ export const CleanDashboard: React.FC = () => {
           dashboardVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
           {/* Left: Hotel Category Condensed Dropdown with Icon */}
-          <div ref={categoryRef} className="relative">
+          <div ref={categoryRef} className="relative z-30">
             <button
               type="button"
               onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-              className="flex items-center gap-2.5 px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 hover:border-slate-300 rounded-full text-xs sm:text-sm font-extrabold text-slate-900 shadow-xs transition-all cursor-pointer"
+              className="flex items-center gap-2.5 px-4 py-2 bg-white/90 hover:bg-white border border-[#CCE8D5] hover:border-[#9ED6B3] rounded-full text-xs sm:text-sm font-extrabold text-[#143B23] shadow-2xs transition-all cursor-pointer"
             >
-              <div className="w-5 h-5 rounded-md bg-[#0D4E43]/10 text-[#0D4E43] flex items-center justify-center shrink-0">
+              <div className="w-5 h-5 rounded-md bg-[#E4F5EB] text-[#247A49] flex items-center justify-center shrink-0">
                 {activeAssetClass === 'flights' ? (
                   <Plane className="w-3.5 h-3.5 stroke-[2.5]" />
                 ) : (
@@ -1449,44 +1381,52 @@ export const CleanDashboard: React.FC = () => {
               <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isCategoryOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {isCategoryOpen && (
-              <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200/90 p-1.5 z-40 animate-scale-in">
-                <span className="text-[11px] font-black text-slate-400 uppercase px-3 py-1.5 block tracking-wider">
-                  Select {activeAssetClass === 'flights' ? 'Flight' : 'Hotel'} Category
-                </span>
-                {hotelCategories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveCategory(cat.id);
-                      setIsCategoryOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-xs sm:text-sm transition-colors flex items-center justify-between cursor-pointer ${
-                      activeCategory === cat.id
-                        ? 'bg-slate-100 font-black text-slate-950'
-                        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950 font-semibold'
-                    }`}
-                  >
-                    <span>{cat.label}</span>
-                    {activeCategory === cat.id && (
-                      <Check className="w-4 h-4 text-[#0D4E43] stroke-[2.5]" />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+            <AnimatePresence>
+              {isCategoryOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 6, scale: 0.97 }}
+                  transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute left-0 top-full mt-2 w-64 bg-white/98 backdrop-blur-md rounded-2xl shadow-2xl border border-[#CCE8D5] p-1.5 z-50 origin-top-left"
+                >
+                  <span className="text-[11px] font-black text-slate-400 uppercase px-3 py-1.5 block tracking-wider">
+                    Select {activeAssetClass === 'flights' ? 'Flight' : 'Hotel'} Category
+                  </span>
+                  {hotelCategories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveCategory(cat.id);
+                        setIsCategoryOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs sm:text-sm transition-colors flex items-center justify-between cursor-pointer ${
+                        activeCategory === cat.id
+                          ? 'bg-[#EBF7EE] font-black text-[#143B23]'
+                          : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950 font-semibold'
+                      }`}
+                    >
+                      <span>{cat.label}</span>
+                      {activeCategory === cat.id && (
+                        <Check className="w-4 h-4 text-[#2E8B57] stroke-[2.5]" />
+                      )}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Right: ALWAYS ON RIGHT HAND SIDE List / Map Switcher */}
-          <div className="flex items-center bg-white border border-slate-200/90 p-1 rounded-full shadow-xs shrink-0">
+          <div className="flex items-center bg-[#E3F2E8] border border-[#CCE8D5] p-1 rounded-full shadow-inner shrink-0">
             <button
               type="button"
               onClick={() => setViewMode('list')}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
                 viewMode === 'list' 
-                  ? 'bg-[#0D4E43] text-white shadow-xs' 
-                  : 'text-slate-600 hover:text-slate-950'
+                  ? 'bg-[#18231E] text-white shadow-[0_2px_8px_rgba(24,35,30,0.2)]' 
+                  : 'text-[#2D5A40] hover:text-[#143823]'
               }`}
             >
               <ListIcon className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -1497,8 +1437,8 @@ export const CleanDashboard: React.FC = () => {
               onClick={() => setViewMode('split')}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold transition-all cursor-pointer ${
                 viewMode === 'split' || viewMode === 'map'
-                  ? 'bg-[#0D4E43] text-white shadow-xs' 
-                  : 'text-slate-600 hover:text-slate-950'
+                  ? 'bg-[#18231E] text-white shadow-[0_2px_8px_rgba(24,35,30,0.2)]' 
+                  : 'text-[#2D5A40] hover:text-[#143823]'
               }`}
             >
               <MapIcon className="w-3.5 h-3.5 stroke-[2.2]" />
@@ -1531,12 +1471,12 @@ export const CleanDashboard: React.FC = () => {
                       style={{
                         transitionDelay: `${dashboardVisible ? 240 + Math.min(idx, 8) * 60 : 0}ms`,
                       }}
-                      className={`group bg-white rounded-2xl p-3.5 border transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden cursor-pointer flex flex-col select-none ${
+                      className={`group bg-white/95 backdrop-blur-xs rounded-2xl p-3.5 border transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden cursor-pointer flex flex-col select-none ${
                         dashboardVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-[0.98]'
                       } ${
                         isSelected 
-                          ? 'border-slate-950 shadow-md ring-2 ring-slate-950/10' 
-                          : 'border-slate-200/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-lg hover:-translate-y-1 hover:border-slate-300'
+                          ? 'border-[#18231E] shadow-[0_8px_30px_rgba(24,35,30,0.12)] ring-2 ring-[#2E8B57]/30' 
+                          : 'border-[#D5EBDC] shadow-[0_4px_20px_rgba(25,75,45,0.05)] hover:shadow-[0_16px_40px_rgba(25,75,45,0.12)] hover:border-[#8FD3A8] hover:-translate-y-1'
                       }`}
                     >
                       {/* Photo Container with Top-Right ⭐ Rating & Bottom-Left 📍 City Pill */}
@@ -1563,14 +1503,14 @@ export const CleanDashboard: React.FC = () => {
                         </button>
 
                         {/* ⭐ Rating Badge (Top Right) - Image 2 Style */}
-                        <div className="absolute top-2.5 right-2.5 bg-white/95 backdrop-blur-md text-slate-950 font-black text-xs sm:text-[13px] px-2.5 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                        <div className="absolute top-2.5 right-2.5 bg-white/95 backdrop-blur-md text-slate-950 font-black text-xs sm:text-[13px] px-2.5 py-0.5 rounded-full shadow-sm flex items-center gap-1 border border-[#D5EBDC]">
                           <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                           <span>{item.rating.toFixed(1)}</span>
                         </div>
 
                         {/* 📍 Location Pill (Bottom Left) - Image 2 Style */}
-                        <div className="absolute bottom-2.5 left-2.5 bg-white/95 backdrop-blur-md text-slate-900 font-bold text-xs sm:text-[13px] px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 max-w-[85%] truncate">
-                          <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <div className="absolute bottom-2.5 left-2.5 bg-white/95 backdrop-blur-md text-[#18452B] font-bold text-xs sm:text-[13px] px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 max-w-[85%] truncate border border-[#D5EBDC]">
+                          <MapPin className="w-3.5 h-3.5 text-[#247A49] shrink-0" />
                           <span className="truncate">{item.city}</span>
                         </div>
                       </div>
@@ -1593,13 +1533,13 @@ export const CleanDashboard: React.FC = () => {
                           <span className="text-slate-500 font-semibold truncate pr-1">
                             Wholesale Allotment • {item.travelWindow}
                           </span>
-                          <span className="text-emerald-800 font-black shrink-0 font-mono">
+                          <span className="text-[#1A6B3D] font-mono font-black shrink-0 bg-[#E8F8EE] px-2 py-0.5 rounded-full border border-[#C5E8D2] text-[11px] sm:text-xs">
                             Profit {item.expectedProfit}
                           </span>
                         </div>
 
                         {/* Specs Row with Clean Icons (Image 2 Specs Style) */}
-                        <div className="flex items-center justify-between text-xs sm:text-sm text-slate-700 font-bold pt-2.5 border-t border-slate-100">
+                        <div className="flex items-center justify-between text-xs sm:text-sm text-slate-700 font-bold pt-2.5 border-t border-[#E1F2E6]">
                           <div className="flex items-center gap-1.5">
                             {item.inventoryType === 'Flights' ? (
                               <Plane className="w-4 h-4 text-slate-400 shrink-0" />
@@ -1610,7 +1550,7 @@ export const CleanDashboard: React.FC = () => {
                           </div>
                           
                           <div className="flex items-center gap-1 text-slate-800 font-black">
-                            <TrendingUp className="w-4 h-4 text-emerald-600 shrink-0 stroke-[2.5]" />
+                            <TrendingUp className="w-4 h-4 text-[#2E8B57] shrink-0 stroke-[2.5]" />
                             <span>{item.demandLift}</span>
                           </div>
 
@@ -1638,7 +1578,7 @@ export const CleanDashboard: React.FC = () => {
             }`}>
               
               {/* Map Container */}
-              <div className="sticky top-[135px] w-full h-[580px] rounded-3xl overflow-hidden border border-slate-200/80 shadow-[0_2px_16px_rgba(0,0,0,0.04)] bg-[#F1F5F9] relative select-none">
+              <div className="sticky top-[135px] w-full h-[580px] rounded-3xl overflow-hidden border border-[#CCE8D5] shadow-[0_8px_32px_rgba(25,75,45,0.06)] bg-[#EBF6EE] relative select-none">
                 
                 {/* SVG Vector Map Canvas */}
                 <svg
@@ -1653,7 +1593,7 @@ export const CleanDashboard: React.FC = () => {
                   <rect 
                     width="1000" 
                     height="800" 
-                    fill={mapLayer === 'satellite' ? '#0f172a' : '#F1F5F9'} 
+                    fill={mapLayer === 'satellite' ? '#0f172a' : '#E8F5EC'} 
                   />
 
                   {/* Water Bodies / Oceans */}

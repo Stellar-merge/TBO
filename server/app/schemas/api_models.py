@@ -50,6 +50,7 @@ class InventoryItem(BaseModel):
     opportunityScore: float
     lat: float
     lng: float
+    isLive: bool = False
     reasonCard: ReasonCard
 
 class PortfolioSummary(BaseModel):
@@ -66,6 +67,9 @@ class PortfolioSummary(BaseModel):
     cvar: float
     totalAllocatedUnits: int
     activeCandidatesCount: int
+    isLiveData: bool = False
+    liveSource: str = "seed_catalog"
+    apiKeyConfigured: bool = False
 
 class MonteCarloPoint(BaseModel):
     bin: float

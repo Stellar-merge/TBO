@@ -52,7 +52,7 @@ export default function App() {
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             id="wishlists-section" 
-            className="w-full bg-[#F8F9FA] min-h-screen pt-[56px]"
+            className="w-full bg-gradient-to-br from-[#F4FAF5] via-[#EBF6EE] to-[#F1F9F3] min-h-screen pt-[56px]"
           >
             <WishlistsView
               onNavigateToDashboard={() => handleNavigate('dashboard')}
@@ -66,7 +66,7 @@ export default function App() {
             exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             id="dashboard-section" 
-            className="w-full bg-[#F8F9FA] min-h-screen pt-[56px]"
+            className="w-full bg-gradient-to-br from-[#F3FAF4] via-[#EAF5ED] to-[#F0F8F2] min-h-screen pt-[56px]"
           >
             <CleanDashboard />
           </motion.main>
