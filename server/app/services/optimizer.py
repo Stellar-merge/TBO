@@ -39,6 +39,22 @@ def solve_inventory_allocation(
         except Exception as e:
             logger.warning(f"Error parsing dates: {e}")
 
+    # Calculate portfolio diversification metrics
+    num_candidates = max(len(candidates), 1)
+    total_wholesale_sum = sum(float(c.get("wholesaleCost", 12000.0)) for c in candidates)
+    avg_wholesale = total_wholesale_sum / num_candidates
+
+    # Dynamic commitment tranche:
+    # If the budget is smaller than contracting full duration_nights across the portfolio,
+    # scale commitment nights to high-velocity peak stay tranches so EVERY viable hotel receives room allocations!
+    total_min_full_stay = total_wholesale_sum * duration_nights
+    if total_budget < total_min_full_stay:
+        effective_nights = max(1, min(duration_nights, int(total_budget / max(1.0, total_wholesale_sum))))
+    else:
+        effective_nights = duration_nights
+
+    target_per_hotel = total_budget / num_candidates
+
     processed_items = []
     for idx, c in enumerate(candidates):
         # 1. Run LightGBM Quantile Forecasters (P10, P50, P90)
@@ -99,9 +115,13 @@ def solve_inventory_allocation(
         opp_score = round(unit_margin * (1.0 - p_cancel) * (p_conv / 0.20), 2)
         
         # Effective commitment cost per room across the booking duration window
-        block_unit_cost = wholesale * duration_nights
-        block_unit_profit = unit_margin * duration_nights * (1.0 - p_cancel)
+        block_unit_cost = wholesale * effective_nights
+        block_unit_profit = unit_margin * effective_nights * (1.0 - p_cancel)
         
+        # Max single-hotel spend to guarantee diversification and multi-hotel procurement
+        max_hotel_spend = max(block_unit_cost, target_per_hotel * 1.5)
+        ub = min(q_star, max(1, int(max_hotel_spend // block_unit_cost)))
+
         # 6. TreeSHAP Attribution Reason Card
         shap_factors = [
             ShapFactor(
@@ -124,22 +144,17 @@ def solve_inventory_allocation(
             )
         ]
         
-        room_label = 'seats' if target_type == 'flights' else c.get('room_type', 'rooms')
-        reason_card = ReasonCard(
-            headline=f"Procure {q_star} {room_label} ({duration_nights}-night block)",
-            confidence=round(0.85 + (p_conv * 0.12), 2),
-            factors=shap_factors,
-            recommendation=f"Execute pre-buy tranche: capture ₹{round(unit_margin * duration_nights, 0):,} net margin per room with {risk_class} risk."
-        )
-        
         processed_items.append({
             "raw": c,
             "q_star": q_star,
+            "ub": ub,
+            "max_hotel_spend": max_hotel_spend,
             "wholesale": wholesale,
             "retail": retail,
             "unit_margin": unit_margin,
             "block_unit_cost": block_unit_cost,
             "block_unit_profit": block_unit_profit,
+            "effective_nights": effective_nights,
             "duration_nights": duration_nights,
             "p10": p10,
             "p50": p50,
@@ -148,22 +163,32 @@ def solve_inventory_allocation(
             "p_conv": p_conv,
             "p_cancel": p_cancel,
             "opp_score": opp_score,
-            "reason_card": reason_card
+            "shap_factors": shap_factors
         })
 
-    # 7. PuLP Mixed-Integer Linear Program (MILP) Budget Optimizer
+    # 7. PuLP Mixed-Integer Linear Program (MILP) Budget Optimizer with Multi-Hotel Diversification
     prob = pulp.LpProblem("Inventory_Budget_Optimization", pulp.LpMaximize)
     
-    # Decision variables: x_i integer rooms to procure (bounded by Newsvendor Q*)
+    # Decision variables: x_i integer rooms to procure (bounded by Newsvendor Q* and diversification upper bound)
     x_vars = {}
     for i, item in enumerate(processed_items):
-        x_vars[i] = pulp.LpVariable(f"x_{i}", lowBound=0, upBound=item["q_star"], cat=pulp.LpInteger)
+        x_vars[i] = pulp.LpVariable(f"x_{i}", lowBound=0, upBound=item["ub"], cat=pulp.LpInteger)
         
     # Objective: Maximize expected total profit
     prob += pulp.lpSum([x_vars[i] * item["block_unit_profit"] for i, item in enumerate(processed_items)])
     
-    # Hard Budget Constraint: sum(x_i * block_unit_cost) <= total_budget
+    # Constraint 1: Hard Budget Constraint: sum(x_i * block_unit_cost) <= total_budget
     prob += pulp.lpSum([x_vars[i] * item["block_unit_cost"] for i, item in enumerate(processed_items)]) <= total_budget
+
+    # Constraint 2: Single-Property Diversification Cap (Anti-Monopoly Constraint)
+    for i, item in enumerate(processed_items):
+        prob += x_vars[i] * item["block_unit_cost"] <= item["max_hotel_spend"]
+
+    # Constraint 3: Minimum Allocation Guarantee (Ensure multi-hotel coverage when budget allows)
+    total_baseline_cost = sum(item["block_unit_cost"] for item in processed_items)
+    if total_budget >= total_baseline_cost:
+        for i, item in enumerate(processed_items):
+            prob += x_vars[i] >= 1
     
     # Solve MILP with fallback to bounded greedy knapsack for OS robustness
     solved_by_milp = False
@@ -175,38 +200,64 @@ def solve_inventory_allocation(
         logger.warning(f"PuLP CBC solver unavailable or failed ({e}); switching to bounded Knapsack optimizer.")
 
     # Collect results
-    total_deployed = 0.0
-    total_expected_revenue = 0.0
-    total_expected_profit = 0.0
-    total_units = 0
-
     if not solved_by_milp:
+        allocated_map = {i: 0 for i in range(len(processed_items))}
         remaining_budget = total_budget
+        
+        # Pass 1: Give 1 unit baseline to viable hotels
+        for i, item in enumerate(processed_items):
+            if remaining_budget >= item["block_unit_cost"]:
+                allocated_map[i] = 1
+                remaining_budget -= item["block_unit_cost"]
+
+        # Pass 2: Allocate remaining budget according to profit efficiency up to ub
         sorted_indices = sorted(
             range(len(processed_items)),
             key=lambda idx: (processed_items[idx]["block_unit_profit"] / max(processed_items[idx]["block_unit_cost"], 1.0)),
             reverse=True
         )
-        allocated_map = {i: 0 for i in range(len(processed_items))}
         for idx in sorted_indices:
             item = processed_items[idx]
-            max_can_buy = min(item["q_star"], int(remaining_budget // item["block_unit_cost"]))
-            allocated_map[idx] = max(0, max_can_buy)
-            remaining_budget -= allocated_map[idx] * item["block_unit_cost"]
+            max_can_buy = min(item["ub"] - allocated_map[idx], int(remaining_budget // item["block_unit_cost"]))
+            if max_can_buy > 0:
+                allocated_map[idx] += max_can_buy
+                remaining_budget -= max_can_buy * item["block_unit_cost"]
     else:
         allocated_map = {i: int(x_vars[i].varValue or 0) for i in range(len(processed_items))}
+
+    # Post-optimization fair allocation pass:
+    # Ensure any hotel with 0 units gets at least 1 unit if remaining budget permits
+    total_spent = sum(allocated_map[i] * processed_items[i]["block_unit_cost"] for i in range(len(processed_items)))
+    rem_budget = total_budget - total_spent
+    for i, item in enumerate(processed_items):
+        if allocated_map[i] == 0 and rem_budget >= item["block_unit_cost"]:
+            allocated_map[i] += 1
+            rem_budget -= item["block_unit_cost"]
+
+    # Top-up remaining budget to highest efficiency properties
+    sorted_by_efficiency = sorted(
+        range(len(processed_items)),
+        key=lambda idx: (processed_items[idx]["block_unit_profit"] / max(processed_items[idx]["block_unit_cost"], 1.0)),
+        reverse=True
+    )
+    for idx in sorted_by_efficiency:
+        item = processed_items[idx]
+        can_add = min(item["ub"] - allocated_map[idx], int(rem_budget // item["block_unit_cost"]))
+        if can_add > 0:
+            allocated_map[idx] += can_add
+            rem_budget -= can_add * item["block_unit_cost"]
+
+    total_deployed = 0.0
+    total_expected_revenue = 0.0
+    total_expected_profit = 0.0
+    total_units = 0
 
     final_items: List[InventoryItem] = []
     for i, item in enumerate(processed_items):
         allocated_qty = allocated_map[i]
-        
-        # If budget allows, ensure at least a minimum test batch (4 rooms)
-        if allocated_qty == 0 and (total_deployed + item["block_unit_cost"] * 4) <= total_budget:
-            allocated_qty = min(4, item["q_star"])
-            
         c = item["raw"]
         batch_cost = round(allocated_qty * item["block_unit_cost"], 2)
-        exp_revenue = round(allocated_qty * item["retail"] * item["duration_nights"], 2)
+        exp_revenue = round(allocated_qty * item["retail"] * item["effective_nights"], 2)
         exp_profit = round(exp_revenue - batch_cost, 2)
         
         total_deployed += batch_cost
@@ -215,6 +266,14 @@ def solve_inventory_allocation(
         total_units += allocated_qty
         
         margin_pct = round((item["unit_margin"] / item["retail"]) * 100, 1)
+
+        room_label = 'seats' if target_type == 'flights' else c.get('room_type', 'rooms')
+        reason_card = ReasonCard(
+            headline=f"Procure {allocated_qty} {room_label} ({item['effective_nights']}-night allotment)",
+            confidence=round(0.85 + (item['p_conv'] * 0.12), 2),
+            factors=item['shap_factors'],
+            recommendation=f"Diversified pre-buy: capture ₹{round(item['unit_margin'] * item['effective_nights'], 0):,} net margin per room with {item['risk_class']} risk."
+        )
         
         final_items.append(InventoryItem(
             id=c["id"],
@@ -243,7 +302,7 @@ def solve_inventory_allocation(
             lng=c["lng"],
             roomType=c.get("room_type", "Executive Deluxe King Room"),
             optimalTiming=c.get("timing", f"Pre-buy {lead_time} days ahead"),
-            reasonCard=item["reason_card"]
+            reasonCard=reason_card
         ))
         
     remaining = max(0.0, total_budget - total_deployed)
