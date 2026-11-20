@@ -35,7 +35,7 @@ export const ThreeStepWorkflow: React.FC = () => {
         <div className="bg-slate-900 text-white p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
           <div className="flex justify-between">
             <span className="text-slate-400">Budget Constraint:</span>
-            <span className="font-bold text-white">$100,000 Cap</span>
+            <span className="font-bold text-white">₹10,00,000 Cap</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Optimal Allocation:</span>
@@ -43,7 +43,7 @@ export const ThreeStepWorkflow: React.FC = () => {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Projected Margin:</span>
-            <span className="font-bold text-emerald-400">+$24,350 (+28.8%)</span>
+            <span className="font-bold text-emerald-400">+₹2,43,500 (+28.8%)</span>
           </div>
         </div>
       ),

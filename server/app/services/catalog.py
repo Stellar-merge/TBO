@@ -307,8 +307,8 @@ def get_candidates_for_query(
     checkin_date: Optional[str] = None,
     checkout_date: Optional[str] = None
 ) -> List[Dict[str, Any]]:
-    # 1. Real-Time Hotel API Integration (Active when HOTEL_API_KEY is supplied in .env)
-    if target_type == "hotels" and is_hotel_api_configured():
+    # 1. Hotels: Query Live Hotel API with intelligent cache & regional twin fallback
+    if target_type == "hotels":
         live_hotels = fetch_live_hotels_from_api(
             location=location,
             checkin_date=checkin_date,
@@ -322,7 +322,7 @@ def get_candidates_for_query(
             ]
             return filtered if filtered else live_hotels
 
-    # 2. Curated Base Catalog (Used when HOTEL_API_KEY is awaiting user key in .env)
+    # 2. Flights or offline fallback
     loc_lower = location.lower()
     matched_dest = None
     for dest in SEED_DESTINATIONS:
@@ -330,15 +330,15 @@ def get_candidates_for_query(
             matched_dest = dest
             break
     if not matched_dest:
-        matched_dest = SEED_DESTINATIONS[0] # Default to Bali if unspecified
+        matched_dest = SEED_DESTINATIONS[3] if "dubai" in loc_lower else SEED_DESTINATIONS[0]
 
     items = []
     source_key = "flights" if target_type == "flights" else "hotels"
-    raw_list = matched_dest.get(source_key, matched_dest["hotels"])
+    raw_list = matched_dest.get(source_key, matched_dest.get("hotels", []))
 
     for item in raw_list:
         if category not in ["All Hotels", "All Flights", "All"]:
-            if item["category"] != category:
+            if item.get("category") != category:
                 continue
         items.append({**item, "destination_name": matched_dest["name"], "target_type": target_type})
     return items

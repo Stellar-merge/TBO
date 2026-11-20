@@ -21,14 +21,14 @@ import {
   Calendar,
   ShieldCheck,
   Check,
-  Navigation,
   Landmark,
-  Waves,
   Palmtree,
   Zap,
   Globe,
   MapPin,
-  RefreshCw
+  RefreshCw,
+  Sparkles,
+  Bed
 } from 'lucide-react';
 import { initialOpportunities } from '../data/opportunityDeals';
 import type { OpportunityCardItem } from '../data/opportunityDeals';
@@ -56,11 +56,11 @@ export const CleanDashboard: React.FC = () => {
   // 1. Airbnb-Style Search Controls (Top: Hotels/Flights, Bottom: Budget, Dates, Location, Risk)
   const [activeAssetClass, setActiveAssetClass] = useState<'hotels' | 'flights'>('hotels');
   const [activeAirbnbSegment, setActiveAirbnbSegment] = useState<'budget' | 'dates' | 'location' | 'risk' | null>(null);
-  const [airbnbBudget, setAirbnbBudget] = useState<number>(500000);
-  const [budgetInputText, setBudgetInputText] = useState<string>('500,000');
+  const [airbnbBudget, setAirbnbBudget] = useState<number>(5000000);
+  const [budgetInputText, setBudgetInputText] = useState<string>('');
   const [airbnbStartDate, setAirbnbStartDate] = useState<string>('2026-11-19');
   const [airbnbEndDate, setAirbnbEndDate] = useState<string>('2026-11-25');
-  const [airbnbLocation, setAirbnbLocation] = useState<string>('Nearby');
+  const [airbnbLocation, setAirbnbLocation] = useState<string>('');
   const [airbnbRisk, setAirbnbRisk] = useState<'Conservative' | 'Moderate' | 'Aggressive'>('Moderate');
   const airbnbBarRef = useRef<HTMLDivElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
@@ -126,46 +126,39 @@ export const CleanDashboard: React.FC = () => {
   // Suggested Destinations matching exact user screenshot
   const suggestedDestinations = [
     {
-      name: 'Nearby',
-      subtitle: "Find what’s around you",
-      icon: Navigation,
-      iconColor: 'text-sky-500',
-      iconBg: 'bg-sky-50',
+      name: 'Mumbai, Maharashtra',
+      subtitle: 'For sights like Gateway of India & luxury coastal stays',
+      icon: Building2,
+      iconColor: 'text-emerald-600',
+      iconBg: 'bg-emerald-50',
     },
     {
       name: 'Kolkata, West Bengal',
-      subtitle: 'For sights like Victoria Memorial',
+      subtitle: 'For colonial heritage, cultural stays & business hubs',
       icon: Landmark,
-      iconColor: 'text-rose-500',
-      iconBg: 'bg-rose-50',
-    },
-    {
-      name: 'Puri, Odisha',
-      subtitle: 'For its seaside allure',
-      icon: Waves,
-      iconColor: 'text-blue-600',
-      iconBg: 'bg-blue-50',
-    },
-    {
-      name: 'Varanasi, Uttar Pradesh',
-      subtitle: 'Popular with travellers near you',
-      icon: Landmark,
-      iconColor: 'text-rose-500',
-      iconBg: 'bg-rose-50',
+      iconColor: 'text-amber-700',
+      iconBg: 'bg-amber-50',
     },
     {
       name: 'North Goa, Goa',
-      subtitle: 'For its bustling nightlife',
+      subtitle: 'For its bustling nightlife & beach resorts',
       icon: Palmtree,
       iconColor: 'text-amber-600',
       iconBg: 'bg-amber-50',
     },
     {
-      name: 'Mumbai, Maharashtra',
-      subtitle: 'For sights like Gateway of India',
+      name: 'Bengaluru, Karnataka',
+      subtitle: 'For tech corporate summits & luxury garden stays',
       icon: Building2,
-      iconColor: 'text-emerald-600',
-      iconBg: 'bg-emerald-50',
+      iconColor: 'text-blue-600',
+      iconBg: 'bg-blue-50',
+    },
+    {
+      name: 'Jaipur, Rajasthan',
+      subtitle: 'For royal palace heritage & wedding tourism peaks',
+      icon: Landmark,
+      iconColor: 'text-rose-600',
+      iconBg: 'bg-rose-50',
     },
     {
       name: 'Dubai, UAE',
@@ -175,18 +168,39 @@ export const CleanDashboard: React.FC = () => {
       iconBg: 'bg-amber-50',
     },
     {
-      name: 'Lisbon, Portugal',
-      subtitle: 'For vibrant heritage & coastal commerce',
+      name: 'Varanasi, Uttar Pradesh',
+      subtitle: 'Popular with travellers near you',
+      icon: Landmark,
+      iconColor: 'text-rose-500',
+      iconBg: 'bg-rose-50',
+    },
+    {
+      name: 'New Delhi, Delhi',
+      subtitle: 'For diplomatic & airport hub allotments',
+      icon: Building2,
+      iconColor: 'text-blue-600',
+      iconBg: 'bg-blue-50',
+    },
+    {
+      name: 'London, UK',
+      subtitle: 'For historic luxury & international business',
       icon: Landmark,
       iconColor: 'text-indigo-600',
       iconBg: 'bg-indigo-50',
     },
     {
-      name: 'Tokyo, Japan',
-      subtitle: 'For rapid turnover & business transit',
-      icon: Building2,
+      name: 'Paris, France',
+      subtitle: 'For vibrant European fashion & tourism demand',
+      icon: Landmark,
       iconColor: 'text-purple-600',
       iconBg: 'bg-purple-50',
+    },
+    {
+      name: 'Tokyo, Japan',
+      subtitle: 'For rapid turnover & transit blocks',
+      icon: Building2,
+      iconColor: 'text-stone-700',
+      iconBg: 'bg-stone-100',
     },
     {
       name: 'All Destinations',
@@ -357,7 +371,7 @@ export const CleanDashboard: React.FC = () => {
     setIsOptimizing(true);
     try {
       const res = await optimizeProcurement({
-        location: airbnbLocation || 'Bali, Indonesia',
+        location: airbnbLocation || 'Mumbai, Maharashtra',
         dates: { startDate: airbnbStartDate, endDate: airbnbEndDate },
         budget: airbnbBudget,
         riskTolerance: airbnbRisk === 'Conservative' ? 'P10 Conservative' : airbnbRisk === 'Aggressive' ? 'P90 Aggressive' : 'P50 Balanced',
@@ -375,15 +389,15 @@ export const CleanDashboard: React.FC = () => {
             id: it.id,
             title: it.name,
             city: it.location,
-            destination: 'Southeast Asia',
+            destination: it.location.includes(',') ? it.location.split(',')[1].trim() : 'India',
             inventoryType: activeAssetClass === 'flights' ? 'Flights' : 'Hotels',
             hotelCategory: (it.category as any) || (activeAssetClass === 'flights' ? 'Direct Carrier' : 'Luxury Resorts'),
             travelWindow: 'Next 30 Days',
             image: it.image,
             bookmarked: false,
-            price: `$${Math.round(it.batchCost).toLocaleString()}`,
+            price: `₹${Math.round(it.batchCost).toLocaleString('en-IN')}`,
             priceNum: it.batchCost,
-            expectedProfit: `+$${Math.round(it.expectedProfit).toLocaleString()}`,
+            expectedProfit: `+₹${Math.round(it.expectedProfit).toLocaleString('en-IN')}`,
             expectedProfitNum: it.expectedProfit,
             allocatedAmount: it.batchCost,
             rooms: it.roomsOrSeats,
@@ -396,11 +410,14 @@ export const CleanDashboard: React.FC = () => {
               y: 22 + ((idx * 29) % 55),
             },
             metric1: { label: 'Allocated', value: `${it.procuredUnits} Units` },
-            metric2: { label: 'Wholesale', value: activeAssetClass === 'flights' ? `$${Math.round(it.wholesaleCostPerUnit)}/seat` : `$${Math.round(it.wholesaleCostPerUnit)}/nt` },
+            metric2: { label: 'Wholesale', value: activeAssetClass === 'flights' ? `₹${Math.round(it.wholesaleCostPerUnit).toLocaleString('en-IN')}/seat` : `₹${Math.round(it.wholesaleCostPerUnit).toLocaleString('en-IN')}/nt` },
             metric3: { label: 'P50 Forecast', value: activeAssetClass === 'flights' ? `${it.demandQuantileP50} s/d` : `${it.demandQuantileP50} r/d` },
             wholesaleCost: it.wholesaleCostPerUnit,
             targetPrice: it.targetSellingPrice,
             recommendedUnits: it.procuredUnits,
+            roomType: it.roomType || (activeAssetClass === 'flights' ? 'Direct Carrier Block' : 'Executive Deluxe Room'),
+            optimalTiming: it.optimalTiming || 'Pre-buy 21-28 days ahead',
+            reasonCard: it.reasonCard,
             p10: it.demandQuantileP10,
             p50: it.demandQuantileP50,
             p90: it.demandQuantileP90,
@@ -417,11 +434,6 @@ export const CleanDashboard: React.FC = () => {
       setIsOptimizing(false);
     }
   }, [airbnbLocation, airbnbStartDate, airbnbEndDate, airbnbBudget, airbnbRisk, activeCategory, activeAssetClass]);
-
-  // Initial and reactive trigger
-  useEffect(() => {
-    runOptimization();
-  }, [runOptimization]);
 
   // View Mode: 'split' | 'list' | 'map' (List view default as requested)
   const [viewMode, setViewMode] = useState<'split' | 'list' | 'map'>('list');
@@ -474,22 +486,6 @@ export const CleanDashboard: React.FC = () => {
       // Min Margin Tag Filter
       if (minMarginFilter && parseInt(item.margin, 10) < 20) {
         return false;
-      }
-
-      // Location Filter (from Airbnb search bar)
-      if (airbnbLocation && airbnbLocation !== 'Nearby') {
-        const locClean = airbnbLocation.split(',')[0].trim().toLowerCase();
-        const matchesAny = items.some((it) =>
-          it.city.toLowerCase().includes(locClean) ||
-          it.title.toLowerCase().includes(locClean) ||
-          it.destination.toLowerCase().includes(locClean)
-        );
-        if (matchesAny) {
-          const matched = item.city.toLowerCase().includes(locClean) || 
-                          item.title.toLowerCase().includes(locClean) ||
-                          item.destination.toLowerCase().includes(locClean);
-          if (!matched) return false;
-        }
       }
 
       // Risk Strategy Filter (from Airbnb search bar)
@@ -559,10 +555,10 @@ export const CleanDashboard: React.FC = () => {
     setActiveCategory('All');
     setSearchQuery('');
     setMinMarginFilter(false);
-    setAirbnbLocation('Nearby');
+    setAirbnbLocation('');
     setAirbnbRisk('Moderate');
     setAirbnbBudget(500000);
-    setBudgetInputText('500,000');
+    setBudgetInputText('');
     setAirbnbStartDate('2026-11-19');
     setAirbnbEndDate('2026-11-25');
     setSortBy('roi');
@@ -570,12 +566,18 @@ export const CleanDashboard: React.FC = () => {
     setMapPan({ x: 0, y: 0 });
   };
 
-  // Map pin price format helper ($284k)
+  // Map pin price format helper (₹28.4L or ₹2.84k)
   const formatPinPrice = (num: number) => {
-    if (num >= 1000) {
-      return `$${Math.round(num / 1000)}k`;
+    if (num >= 10000000) {
+      return `₹${(num / 10000000).toFixed(1)}Cr`;
     }
-    return `$${num}`;
+    if (num >= 100000) {
+      return `₹${(num / 100000).toFixed(1)}L`;
+    }
+    if (num >= 1000) {
+      return `₹${Math.round(num / 1000)}k`;
+    }
+    return `₹${num}`;
   };
 
   // Zoom handlers
@@ -681,7 +683,7 @@ export const CleanDashboard: React.FC = () => {
                 Budget
               </label>
               <div className="flex items-center text-sm sm:text-base font-bold text-slate-950 mt-0.5">
-                <span className="text-slate-400 mr-0.5 select-none font-bold">$</span>
+                {budgetInputText ? <span className="text-slate-400 mr-0.5 select-none font-bold">₹</span> : null}
                 <input
                   ref={budgetInputRef}
                   type="text"
@@ -694,10 +696,10 @@ export const CleanDashboard: React.FC = () => {
                       setActiveAirbnbSegment('dates');
                     }
                   }}
-                  placeholder="Add budget"
-                  className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-950 placeholder:text-slate-400 outline-none truncate"
+                  placeholder="Add budget (e.g. ₹50,00,000)"
+                  className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-950 placeholder:text-slate-400 outline-none focus:outline-none focus:ring-0 truncate"
                 />
-                {airbnbBudget > 0 && activeAirbnbSegment === 'budget' && (
+                {budgetInputText && activeAirbnbSegment === 'budget' && (
                   <button
                     type="button"
                     onClick={(e) => {
@@ -773,15 +775,18 @@ export const CleanDashboard: React.FC = () => {
                   onFocus={() => setActiveAirbnbSegment('location')}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      if (filteredDestinations.length > 0) {
+                      e.preventDefault();
+                      if (filteredDestinations.length > 0 && !airbnbLocation.includes(',')) {
                         const top = filteredDestinations[0];
                         setAirbnbLocation(top.name);
                       }
-                      setActiveAirbnbSegment('dates');
+                      setActiveAirbnbSegment(null);
+                      runOptimization();
+                      setPopupVisible(true);
                     }
                   }}
-                  placeholder="Search destinations"
-                  className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-950 placeholder:text-slate-400 outline-none truncate"
+                  placeholder="Search destinations (e.g. Mumbai, Goa, Dubai)"
+                  className="w-full bg-transparent text-sm sm:text-base font-bold text-slate-950 placeholder:text-slate-400 outline-none focus:outline-none focus:ring-0 truncate"
                 />
                 {airbnbLocation && activeAirbnbSegment === 'location' && (
                   <button
@@ -819,7 +824,7 @@ export const CleanDashboard: React.FC = () => {
             >
               <span className="text-xs sm:text-[14px] font-black text-slate-900 block leading-tight">Risk Tolerance</span>
               <span className="text-sm sm:text-base text-slate-950 font-bold truncate block mt-0.5">
-                {airbnbRisk === 'Conservative' ? 'Conservative (P10)' : airbnbRisk === 'Aggressive' ? 'Aggressive (P90)' : 'Moderate (P50)'}
+                {airbnbRisk === 'Conservative' ? 'Conservative (P10–P25)' : airbnbRisk === 'Aggressive' ? 'Aggressive (P90–P97.5)' : 'Moderate (P50)'}
               </span>
             </button>
 
@@ -858,12 +863,12 @@ export const CleanDashboard: React.FC = () => {
                       Suggested budgets
                     </span>
                     <span className="text-[11px] text-stone-400 font-medium">
-                      Max capital cap ($B)
+                      Max capital cap (₹B)
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    {[100000, 250000, 500000, 1000000, 2500000].map((val) => (
+                    {[1000000, 2500000, 5000000, 10000000, 25000000].map((val) => (
                       <button
                         key={val}
                         type="button"
@@ -877,7 +882,7 @@ export const CleanDashboard: React.FC = () => {
                             : 'border border-stone-200 hover:border-stone-400 text-stone-700 hover:bg-stone-50'
                         }`}
                       >
-                        ${val >= 1000000 ? `${val / 1000000}M` : `${val / 1000}K`}
+                        {val >= 10000000 ? `₹${val / 10000000} Cr` : val >= 100000 ? `₹${val / 100000} L` : `₹${val / 1000}k`}
                       </button>
                     ))}
                   </div>
@@ -920,6 +925,66 @@ export const CleanDashboard: React.FC = () => {
 
                 {dateMode === 'dates' ? (
                   <>
+                    {/* AI Recommended Demand Surge Windows */}
+                    <div className="mb-5 p-3.5 bg-gradient-to-r from-[#EBF6EE] via-[#F2FAF4] to-[#EBF6EE] rounded-2xl border border-[#CCE8D5] flex items-center justify-between flex-wrap gap-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-[#2E8B57] text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <Sparkles className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-slate-950 block leading-tight">AI Recommended Surge Windows</span>
+                          <span className="text-[10px] text-slate-500 font-medium">Click to lock optimal procurement timing</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAirbnbStartDate('2026-11-24');
+                            setAirbnbEndDate('2026-11-30');
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            airbnbStartDate === '2026-11-24' && airbnbEndDate === '2026-11-30'
+                              ? 'bg-[#18452B] text-white shadow-xs'
+                              : 'bg-white hover:bg-white/90 text-slate-800 border border-[#CCE8D5]'
+                          }`}
+                        >
+                          <span>🔥 Nov 24 – 30 (Holiday Peak)</span>
+                          <span className="text-[10px] text-[#2E8B57] font-black">+28% margin</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAirbnbStartDate('2026-12-24');
+                            setAirbnbEndDate('2026-12-31');
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            airbnbStartDate === '2026-12-24' && airbnbEndDate === '2026-12-31'
+                              ? 'bg-[#18452B] text-white shadow-xs'
+                              : 'bg-white hover:bg-white/90 text-slate-800 border border-[#CCE8D5]'
+                          }`}
+                        >
+                          <span>🎄 Dec 24 – 31 (Year-End)</span>
+                          <span className="text-[10px] text-[#2E8B57] font-black">95% sell-thru</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAirbnbStartDate('2027-01-22');
+                            setAirbnbEndDate('2027-01-28');
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                            airbnbStartDate === '2027-01-22' && airbnbEndDate === '2027-01-28'
+                              ? 'bg-[#18452B] text-white shadow-xs'
+                              : 'bg-white hover:bg-white/90 text-slate-800 border border-[#CCE8D5]'
+                          }`}
+                        >
+                          <span>☀️ Jan 22 – 28 (Weekend)</span>
+                          <span className="text-[10px] text-[#2E8B57] font-black">Low risk</span>
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Dual-Month Calendar View */}
                     <div className="flex flex-col md:flex-row gap-8 mb-6">
                       {renderCalendarMonth(calendarBaseYear, calendarBaseMonth, true)}
@@ -1066,7 +1131,9 @@ export const CleanDashboard: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        setActiveAirbnbSegment('dates');
+                        setActiveAirbnbSegment(null);
+                        runOptimization();
+                        setPopupVisible(true);
                       }}
                       className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-stone-100 transition-colors cursor-pointer text-left group"
                     >
@@ -1111,7 +1178,7 @@ export const CleanDashboard: React.FC = () => {
                   {[
                     {
                       id: 'Conservative',
-                      name: 'Conservative (P10 Floor)',
+                      name: 'Conservative (P10–P25 Safe Floor)',
                       subtitle: 'Locked-in margins • Zero room spoilage risk',
                       icon: ShieldCheck,
                       iconBg: 'bg-sky-50',
@@ -1119,16 +1186,16 @@ export const CleanDashboard: React.FC = () => {
                     },
                     {
                       id: 'Moderate',
-                      name: 'Moderate (P50 Baseline)',
-                      subtitle: 'Balanced Sharpe ratio across seasonal patterns',
+                      name: 'Moderate (P50 Balanced Baseline)',
+                      subtitle: 'Full distribution Sharpe ratio across seasonal patterns',
                       icon: TrendingUp,
                       iconBg: 'bg-rose-50',
                       iconColor: 'text-rose-500',
                     },
                     {
                       id: 'Aggressive',
-                      name: 'Aggressive (P90 Upside)',
-                      subtitle: 'Pre-buys higher allotments to capture peak demand',
+                      name: 'Aggressive (P90–P97.5 Holiday Surge)',
+                      subtitle: 'Pre-buys higher allotments to capture peak holiday surges',
                       icon: Zap,
                       iconBg: 'bg-amber-50',
                       iconColor: 'text-amber-600',
@@ -1280,13 +1347,13 @@ export const CleanDashboard: React.FC = () => {
 
             {/* Tag 3: Budget Constraint Tag */}
             <span className="bg-white/90 backdrop-blur-xs border border-[#CCE8D5] text-[#16452B] text-xs sm:text-[13px] font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-2xs hover:border-[#9ED6B3] transition-all">
-              <span>Budget: &lt; ${(airbnbBudget / 1000).toLocaleString()}k</span>
-              {airbnbBudget !== 500000 && (
+              <span>Budget: &lt; {formatPinPrice(airbnbBudget)}</span>
+              {airbnbBudget !== 5000000 && (
                 <button
                   type="button"
                   onClick={() => {
-                    setAirbnbBudget(500000);
-                    setBudgetInputText('500,000');
+                    setAirbnbBudget(5000000);
+                    setBudgetInputText('50,00,000');
                   }}
                   className="text-slate-400 hover:text-slate-900 ml-0.5 cursor-pointer"
                   title="Reset budget cap"
@@ -1528,29 +1595,37 @@ export const CleanDashboard: React.FC = () => {
                           </span>
                         </div>
 
-                        {/* Subtitle and Profit Uplift */}
-                        <div className="flex items-center justify-between text-xs sm:text-sm mb-3">
-                          <span className="text-slate-500 font-semibold truncate pr-1">
-                            Wholesale Allotment • {item.travelWindow}
+                        {/* Recommended Room & Q* Allocation Badge */}
+                        <div className="flex items-center justify-between text-xs mb-1.5 gap-2">
+                          <span className="font-bold text-slate-800 truncate flex items-center gap-1.5">
+                            <Bed className="w-3.5 h-3.5 text-[#2E8B57] shrink-0" />
+                            <span className="truncate">{item.roomType || 'Executive Deluxe Room'}</span>
                           </span>
-                          <span className="text-[#1A6B3D] font-mono font-black shrink-0 bg-[#E8F8EE] px-2 py-0.5 rounded-full border border-[#C5E8D2] text-[11px] sm:text-xs">
+                          <span className="text-[11px] font-black text-[#18452B] bg-[#E8F8EE] border border-[#C5E8D2] px-2 py-0.5 rounded-md shrink-0">
+                            Q*: {item.recommendedUnits} of {item.rooms} {item.inventoryType === 'Flights' ? 'seats' : 'rooms'}
+                          </span>
+                        </div>
+
+                        {/* Optimal Timing and Profit Uplift */}
+                        <div className="flex items-center justify-between text-xs mb-2.5">
+                          <span className="text-slate-500 font-semibold truncate pr-1 text-[11px] flex items-center gap-1">
+                            <Zap className="w-3 h-3 text-amber-500 shrink-0" />
+                            <span>{item.optimalTiming || 'Pre-buy 21-28 days ahead'}</span>
+                          </span>
+                          <span className="text-[#1A6B3D] font-mono font-black shrink-0 bg-[#E8F8EE] px-2 py-0.5 rounded-full border border-[#C5E8D2] text-[11px]">
                             Profit {item.expectedProfit}
                           </span>
                         </div>
 
                         {/* Specs Row with Clean Icons (Image 2 Specs Style) */}
-                        <div className="flex items-center justify-between text-xs sm:text-sm text-slate-700 font-bold pt-2.5 border-t border-[#E1F2E6]">
-                          <div className="flex items-center gap-1.5">
-                            {item.inventoryType === 'Flights' ? (
-                              <Plane className="w-4 h-4 text-slate-400 shrink-0" />
-                            ) : (
-                              <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
-                            )}
-                            <span>{item.rooms} {item.inventoryType === 'Flights' ? 'Seats' : 'Rooms'}</span>
+                        <div className="flex items-center justify-between text-xs sm:text-sm text-slate-700 font-bold pt-2 border-t border-[#E1F2E6]">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] text-slate-500 font-semibold">Wholesale:</span>
+                            <span className="font-mono text-slate-900 font-bold">{item.metric2.value}</span>
                           </div>
                           
                           <div className="flex items-center gap-1 text-slate-800 font-black">
-                            <TrendingUp className="w-4 h-4 text-[#2E8B57] shrink-0 stroke-[2.5]" />
+                            <TrendingUp className="w-3.5 h-3.5 text-[#2E8B57] shrink-0 stroke-[2.5]" />
                             <span>{item.demandLift}</span>
                           </div>
 
@@ -1559,6 +1634,20 @@ export const CleanDashboard: React.FC = () => {
                             <span>{item.margin}</span>
                           </div>
                         </div>
+
+                        {/* Action Link to Inspect Deep ML Reason Card */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setModalItem(item);
+                          }}
+                          className="mt-2.5 w-full py-1.5 rounded-xl bg-slate-50 hover:bg-[#EBF6EE] border border-[#CCE8D5] text-[#18452B] hover:text-[#0D4E43] text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 group-hover:border-[#2E8B57]/50"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-[#2E8B57]" />
+                          <span>View Room Allocation & Reason Card</span>
+                          <ExternalLink className="w-3 h-3 text-slate-400" />
+                        </button>
 
                       </div>
                     </div>

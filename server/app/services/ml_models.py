@@ -118,8 +118,8 @@ class ModelManager:
                 self.load_status["model5_preprocessor"] = False
 
     def predict_hotel_quantiles(self, hotel_idx: int, month: int, day: int, dayofweek: int) -> dict:
-        """Runs the LightGBM quantile demand models for hotel room allotments."""
-        if all(q in self.hotel_models for q in ["P10", "P50", "P90"]):
+        """Runs the LightGBM quantile demand models for hotel room allotments across all 5 quantiles."""
+        if all(q in self.hotel_models for q in ["P10", "P25", "P50", "P90", "P975"]):
             try:
                 feature_names = self.hotel_models["P10"].feature_name_
                 sin_dow = float(np.sin(2 * np.pi * dayofweek / 7.0))
@@ -140,23 +140,33 @@ class ModelManager:
                 df = pd.DataFrame(row_data, columns=feature_names)
 
                 p10 = max(5.0, float(self.hotel_models["P10"].predict(df)[0]))
-                p50 = max(p10 * 1.15, float(self.hotel_models["P50"].predict(df)[0]))
+                p25 = max(p10 * 1.08, float(self.hotel_models["P25"].predict(df)[0]))
+                p50 = max(p25 * 1.12, float(self.hotel_models["P50"].predict(df)[0]))
                 p90 = max(p50 * 1.25, float(self.hotel_models["P90"].predict(df)[0]))
-                return {"P10": round(p10, 1), "P50": round(p50, 1), "P90": round(p90, 1)}
+                p975 = max(p90 * 1.15, float(self.hotel_models["P975"].predict(df)[0]))
+                return {
+                    "P10": round(p10, 1),
+                    "P25": round(p25, 1),
+                    "P50": round(p50, 1),
+                    "P90": round(p90, 1),
+                    "P975": round(p975, 1)
+                }
             except Exception as e:
                 print(f"Hotel quantile inference fallback: {e}")
 
-        # Fallback calibrated quantile distribution
+        # Fallback calibrated quantile distribution across all 5 quantiles
         base = 28.0 + (hotel_idx % 7) * 7.0
         return {
-            "P10": round(base * 0.75, 1),
-            "P50": round(base * 1.0, 1),
+            "P10": round(base * 0.72, 1),
+            "P25": round(base * 0.85, 1),
+            "P50": round(base * 1.00, 1),
             "P90": round(base * 1.45, 1),
+            "P975": round(base * 1.70, 1)
         }
 
     def predict_flight_quantiles(self, flight_idx: int, month: int) -> dict:
-        """Runs the LightGBM quantile demand models for flight seat procurement blocks."""
-        if all(q in self.flight_models for q in ["P10", "P50", "P90"]):
+        """Runs the LightGBM quantile demand models for flight seat procurement blocks across all 5 quantiles."""
+        if all(q in self.flight_models for q in ["P10", "P25", "P50", "P90", "P975"]):
             try:
                 feature_names = self.flight_models["P10"].feature_name_
                 sin_m = float(np.sin(2 * np.pi * month / 12.0))
@@ -175,17 +185,27 @@ class ModelManager:
                 df = pd.DataFrame(row_data, columns=feature_names)
 
                 p10 = max(15.0, float(self.flight_models["P10"].predict(df)[0]))
-                p50 = max(p10 * 1.2, float(self.flight_models["P50"].predict(df)[0]))
-                p90 = max(p50 * 1.3, float(self.flight_models["P90"].predict(df)[0]))
-                return {"P10": round(p10, 1), "P50": round(p50, 1), "P90": round(p90, 1)}
+                p25 = max(p10 * 1.10, float(self.flight_models["P25"].predict(df)[0]))
+                p50 = max(p25 * 1.15, float(self.flight_models["P50"].predict(df)[0]))
+                p90 = max(p50 * 1.30, float(self.flight_models["P90"].predict(df)[0]))
+                p975 = max(p90 * 1.20, float(self.flight_models["P975"].predict(df)[0]))
+                return {
+                    "P10": round(p10, 1),
+                    "P25": round(p25, 1),
+                    "P50": round(p50, 1),
+                    "P90": round(p90, 1),
+                    "P975": round(p975, 1)
+                }
             except Exception as e:
                 print(f"Flight quantile inference fallback: {e}")
 
         base = 55.0 + (flight_idx % 5) * 15.0
         return {
             "P10": round(base * 0.70, 1),
-            "P50": round(base * 1.0, 1),
+            "P25": round(base * 0.85, 1),
+            "P50": round(base * 1.00, 1),
             "P90": round(base * 1.50, 1),
+            "P975": round(base * 1.80, 1)
         }
 
     def predict_flight_cancellation(self, origin: str, dest: str, month: int, day_of_week: int) -> float:

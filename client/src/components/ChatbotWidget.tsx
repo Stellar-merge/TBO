@@ -70,7 +70,7 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
       label: 'Make a plan', 
       icon: Sparkles, 
       color: 'text-purple-600 bg-purple-50 border-purple-100', 
-      query: `Make an optimal procurement plan under the $500,000 budget cap` 
+      query: `Make an optimal procurement plan under the ₹50,00,000 budget cap` 
     },
     { 
       label: 'Summarize text', 
@@ -118,7 +118,7 @@ export const ChatbotWidget: React.FC<ChatbotWidgetProps> = ({
       } else if (q.includes('image') || q.includes('visual')) {
         replyText = `🎨 Rendering portfolio distribution graph: Generating multi-tier quantile demand charts (P10, P50, P90) and real-time category distribution for ${currentDestination}.`;
       } else if (q.includes('plan') || q.includes('procurement') || q.includes('budget')) {
-        replyText = `📋 Procurement Plan Generated:\n• Total Budget: $500,000\n• Algorithm: PuLP MILP Solver + Newsvendor Q* Sizing\n• Optimization Target: Maximize expected net profit under hard capital ceiling.\n• 15 verified properties selected with average margin of 25.8%.`;
+        replyText = `📋 Procurement Plan Generated:\n• Total Budget: ₹50,00,000\n• Algorithm: PuLP MILP Solver + Newsvendor Q* Sizing\n• Optimization Target: Maximize expected net profit under hard capital ceiling.\n• 15 verified properties selected with average margin of 25.8%.`;
       } else if (q.includes('summarize') || q.includes('cancellation') || q.includes('terms')) {
         replyText = `📄 Contract & Risk Summary:\n• Calibrated Cancellation Risk: 18.2% median across active allotments\n• Critical Fractile (CF): 0.74 calculated via (Price - Wholesale) / (Price - Salvage)\n• Downside Risk Buffer: Fully covered by Isotonic Regression Platt scaling.`;
       } else if (q.includes('write') || q.includes('order') || q.includes('commitment')) {

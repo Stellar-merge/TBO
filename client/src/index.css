@@ -38,11 +38,17 @@ body {
   color: #ffffff;
 }
 
-/* ─── Focus Visible (Accessibility) ─── */
+/* ─── Remove default blue outline on focus / tap ─── */
+input, textarea, select, button {
+  outline: none !important;
+}
+
+input:focus, textarea:focus, select:focus, button:focus {
+  outline: none !important;
+}
+
 *:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: none !important;
 }
 
 /* Remove focus ring for mouse users */

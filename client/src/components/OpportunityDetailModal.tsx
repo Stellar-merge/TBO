@@ -118,20 +118,67 @@ const ModalContent: React.FC<{ item: OpportunityCardItem; onClose: () => void }>
           </div>
 
           {/* Allocation badge */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/60">
-              Allocated: ${item.allocatedAmount.toLocaleString()}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/80">
+              Allocated: ₹{item.allocatedAmount.toLocaleString('en-IN')}
             </span>
-            <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/60">
-              Q*: {item.recommendedUnits} units
+            <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/80">
+              Q*: {item.recommendedUnits} of {item.rooms} {item.inventoryType === 'Flights' ? 'seats' : 'rooms'}
             </span>
+            {item.roomType && (
+              <span className="text-[10px] font-semibold text-purple-700 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200/80">
+                🛏️ {item.roomType}
+              </span>
+            )}
+            {item.optimalTiming && (
+              <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/80">
+                ⚡ {item.optimalTiming}
+              </span>
+            )}
           </div>
+
+          {/* TreeSHAP AI Attribution Reason Card */}
+          {item.reasonCard && (
+            <div className="bg-gradient-to-br from-emerald-50/70 via-teal-50/50 to-white p-3.5 rounded-xl border border-emerald-200/70 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-emerald-950 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  SHAP Explainability & Reason Card
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                  {Math.round((item.reasonCard.confidence || 0.9) * 100)}% Confidence
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-stone-800">
+                {item.reasonCard.headline}
+              </p>
+              {item.reasonCard.factors && item.reasonCard.factors.length > 0 && (
+                <div className="space-y-1 pt-1">
+                  {item.reasonCard.factors.map((f: any, fIdx: number) => (
+                    <div key={fIdx} className="text-[11px] text-stone-600 flex items-start gap-1.5">
+                      <span className={f.direction === 'positive' ? 'text-emerald-600 font-black' : 'text-rose-500 font-black'}>
+                        {f.direction === 'positive' ? '↑' : '↓'}
+                      </span>
+                      <span>
+                        <strong className="text-stone-900">{f.feature}:</strong> {f.description}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {item.reasonCard.recommendation && (
+                <p className="text-[11px] text-emerald-900 bg-white/80 p-2 rounded-lg border border-emerald-100 font-medium">
+                  💡 {item.reasonCard.recommendation}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Economics Table */}
           <div className="bg-gray-50/70 p-4 rounded-xl border border-gray-100 space-y-2.5 text-xs">
             {[
-              { label: item.inventoryType === 'Flights' ? 'Wholesale Seat Rate' : 'Wholesale Pre-buy Rate', value: `$${item.wholesaleCost} / ${item.inventoryType === 'Flights' ? 'seat' : 'unit'}`, bold: false },
-              { label: item.inventoryType === 'Flights' ? 'Target Selling Price' : 'Target Distribution Price', value: `$${item.targetPrice} / ${item.inventoryType === 'Flights' ? 'seat' : 'unit'}`, bold: false },
+              { label: item.inventoryType === 'Flights' ? 'Wholesale Seat Rate' : 'Wholesale Pre-buy Rate', value: `₹${item.wholesaleCost.toLocaleString('en-IN')} / ${item.inventoryType === 'Flights' ? 'seat' : 'nt'}`, bold: false },
+              { label: item.inventoryType === 'Flights' ? 'Target Selling Price' : 'Target Distribution Price', value: `₹${item.targetPrice.toLocaleString('en-IN')} / ${item.inventoryType === 'Flights' ? 'seat' : 'nt'}`, bold: false },
               { 
                 label: item.inventoryType === 'Flights' ? 'Model 3 Flight Cancellation Risk' : 'Calibrated Cancellation Risk', 
                 value: `${item.cancellationRisk > 1 ? item.cancellationRisk.toFixed(0) : (item.cancellationRisk * 100).toFixed(0)}%`, 

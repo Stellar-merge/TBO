@@ -77,7 +77,9 @@ def optimize_procurement(req: OptimizationRequest):
             candidates=candidates,
             total_budget=req.budget,
             risk_tolerance=req.riskTolerance,
-            target_type=req.targetType
+            target_type=req.targetType,
+            checkin_date=req.dates.startDate if req.dates else None,
+            checkout_date=req.dates.endDate if req.dates else None
         )
         
         summary = optimization_result["summary"]

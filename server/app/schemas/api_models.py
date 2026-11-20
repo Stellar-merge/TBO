@@ -6,9 +6,9 @@ class DateRange(BaseModel):
     endDate: str
 
 class OptimizationRequest(BaseModel):
-    location: str = "Bali, Indonesia"
+    location: str = "Mumbai, Maharashtra"
     dates: DateRange = Field(default_factory=lambda: DateRange(startDate="2026-11-20", endDate="2026-11-26"))
-    budget: float = 500000.0
+    budget: float = 5000000.0
     riskTolerance: str = "P50 Balanced"  # "P10 Conservative", "P50 Balanced", "P90 Aggressive"
     category: str = "All Hotels"
     targetType: str = "hotels" # "hotels" or "flights"
@@ -51,6 +51,8 @@ class InventoryItem(BaseModel):
     lat: float
     lng: float
     isLive: bool = False
+    roomType: Optional[str] = "Deluxe King Room"
+    optimalTiming: Optional[str] = "Pre-buy 25-30 days ahead"
     reasonCard: ReasonCard
 
 class PortfolioSummary(BaseModel):

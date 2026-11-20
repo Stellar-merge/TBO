@@ -49,6 +49,8 @@ export interface ApiInventoryItem {
   opportunityScore: number;
   lat: number;
   lng: number;
+  roomType?: string;
+  optimalTiming?: string;
   reasonCard: ReasonCardData;
 }
 

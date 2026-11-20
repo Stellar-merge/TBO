@@ -62,7 +62,7 @@ function useCountUp(target: string, duration = 1200) {
 const metrics = [
   { icon: TrendingUp, value: '+18.5%', label: 'Projected Profit Uplift' },
   { icon: BarChart3, value: '2.4M', label: 'High-Demand Searches' },
-  { icon: Briefcase, value: '$12.8M', label: 'Recommended Investment' },
+  { icon: Briefcase, value: '₹105 Cr', label: 'Recommended Investment' },
   { icon: ShieldCheck, value: '92%', label: 'Demand Confidence' },
 ];
 
@@ -110,7 +110,7 @@ export const OverviewHero: React.FC<OverviewHeroProps> = ({
   const counters = [
     useCountUp('+18.5%', 1400),
     useCountUp('2.4M', 1200),
-    useCountUp('$12.8M', 1300),
+    useCountUp('₹105 Cr', 1300),
     useCountUp('92%', 1100),
   ];
 
