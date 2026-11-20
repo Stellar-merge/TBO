@@ -37,6 +37,94 @@ import { ChatbotWidget } from './ChatbotWidget';
 import { BudgetAllocationCard } from './BudgetAllocationCard';
 import { optimizeProcurement } from '../services/api';
 
+// Static Curated Destinations matching exact user screenshot
+const SUGGESTED_DESTINATIONS = [
+  {
+    name: 'Mumbai, Maharashtra',
+    subtitle: 'For sights like Gateway of India & luxury coastal stays',
+    icon: Building2,
+    iconColor: 'text-emerald-600',
+    iconBg: 'bg-emerald-50',
+  },
+  {
+    name: 'Kolkata, West Bengal',
+    subtitle: 'For colonial heritage, cultural stays & business hubs',
+    icon: Landmark,
+    iconColor: 'text-amber-700',
+    iconBg: 'bg-amber-50',
+  },
+  {
+    name: 'North Goa, Goa',
+    subtitle: 'For its bustling nightlife & beach resorts',
+    icon: Palmtree,
+    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-50',
+  },
+  {
+    name: 'Bengaluru, Karnataka',
+    subtitle: 'For tech corporate summits & luxury garden stays',
+    icon: Building2,
+    iconColor: 'text-blue-600',
+    iconBg: 'bg-blue-50',
+  },
+  {
+    name: 'Jaipur, Rajasthan',
+    subtitle: 'For royal palace heritage & wedding tourism peaks',
+    icon: Landmark,
+    iconColor: 'text-rose-600',
+    iconBg: 'bg-rose-50',
+  },
+  {
+    name: 'Dubai, UAE',
+    subtitle: 'For ultra-luxury high-yield allotments',
+    icon: Building2,
+    iconColor: 'text-amber-600',
+    iconBg: 'bg-amber-50',
+  },
+  {
+    name: 'Varanasi, Uttar Pradesh',
+    subtitle: 'Popular with travellers near you',
+    icon: Landmark,
+    iconColor: 'text-rose-500',
+    iconBg: 'bg-rose-50',
+  },
+  {
+    name: 'New Delhi, Delhi',
+    subtitle: 'For diplomatic & airport hub allotments',
+    icon: Building2,
+    iconColor: 'text-blue-600',
+    iconBg: 'bg-blue-50',
+  },
+  {
+    name: 'London, UK',
+    subtitle: 'For historic luxury & international business',
+    icon: Landmark,
+    iconColor: 'text-indigo-600',
+    iconBg: 'bg-indigo-50',
+  },
+  {
+    name: 'Paris, France',
+    subtitle: 'For vibrant European fashion & tourism demand',
+    icon: Landmark,
+    iconColor: 'text-purple-600',
+    iconBg: 'bg-purple-50',
+  },
+  {
+    name: 'Tokyo, Japan',
+    subtitle: 'For rapid turnover & transit blocks',
+    icon: Building2,
+    iconColor: 'text-stone-700',
+    iconBg: 'bg-stone-100',
+  },
+  {
+    name: 'All Destinations',
+    subtitle: 'Global portfolio optimization across all markets',
+    icon: Search,
+    iconColor: 'text-stone-700',
+    iconBg: 'bg-stone-100',
+  },
+];
+
 export const CleanDashboard: React.FC = () => {
   // Entrance Animation Trigger (Staggered cinematic entrance matching OverviewHero)
   const [dashboardVisible, setDashboardVisible] = useState(false);
@@ -123,106 +211,18 @@ export const CleanDashboard: React.FC = () => {
     }
   };
 
-  // Suggested Destinations matching exact user screenshot
-  const suggestedDestinations = [
-    {
-      name: 'Mumbai, Maharashtra',
-      subtitle: 'For sights like Gateway of India & luxury coastal stays',
-      icon: Building2,
-      iconColor: 'text-emerald-600',
-      iconBg: 'bg-emerald-50',
-    },
-    {
-      name: 'Kolkata, West Bengal',
-      subtitle: 'For colonial heritage, cultural stays & business hubs',
-      icon: Landmark,
-      iconColor: 'text-amber-700',
-      iconBg: 'bg-amber-50',
-    },
-    {
-      name: 'North Goa, Goa',
-      subtitle: 'For its bustling nightlife & beach resorts',
-      icon: Palmtree,
-      iconColor: 'text-amber-600',
-      iconBg: 'bg-amber-50',
-    },
-    {
-      name: 'Bengaluru, Karnataka',
-      subtitle: 'For tech corporate summits & luxury garden stays',
-      icon: Building2,
-      iconColor: 'text-blue-600',
-      iconBg: 'bg-blue-50',
-    },
-    {
-      name: 'Jaipur, Rajasthan',
-      subtitle: 'For royal palace heritage & wedding tourism peaks',
-      icon: Landmark,
-      iconColor: 'text-rose-600',
-      iconBg: 'bg-rose-50',
-    },
-    {
-      name: 'Dubai, UAE',
-      subtitle: 'For ultra-luxury high-yield allotments',
-      icon: Building2,
-      iconColor: 'text-amber-600',
-      iconBg: 'bg-amber-50',
-    },
-    {
-      name: 'Varanasi, Uttar Pradesh',
-      subtitle: 'Popular with travellers near you',
-      icon: Landmark,
-      iconColor: 'text-rose-500',
-      iconBg: 'bg-rose-50',
-    },
-    {
-      name: 'New Delhi, Delhi',
-      subtitle: 'For diplomatic & airport hub allotments',
-      icon: Building2,
-      iconColor: 'text-blue-600',
-      iconBg: 'bg-blue-50',
-    },
-    {
-      name: 'London, UK',
-      subtitle: 'For historic luxury & international business',
-      icon: Landmark,
-      iconColor: 'text-indigo-600',
-      iconBg: 'bg-indigo-50',
-    },
-    {
-      name: 'Paris, France',
-      subtitle: 'For vibrant European fashion & tourism demand',
-      icon: Landmark,
-      iconColor: 'text-purple-600',
-      iconBg: 'bg-purple-50',
-    },
-    {
-      name: 'Tokyo, Japan',
-      subtitle: 'For rapid turnover & transit blocks',
-      icon: Building2,
-      iconColor: 'text-stone-700',
-      iconBg: 'bg-stone-100',
-    },
-    {
-      name: 'All Destinations',
-      subtitle: 'Global portfolio optimization across all markets',
-      icon: Search,
-      iconColor: 'text-stone-700',
-      iconBg: 'bg-stone-100',
-    },
-  ];
-
   // Auto-suggestion filtered destinations based on typed query
   const filteredDestinations = useMemo(() => {
     const q = airbnbLocation.trim().toLowerCase();
     if (!q || q === 'nearby' || q === 'all destinations') {
-      return suggestedDestinations;
+      return SUGGESTED_DESTINATIONS;
     }
-    return suggestedDestinations.filter(
+    return SUGGESTED_DESTINATIONS.filter(
       (dest) =>
         dest.name.toLowerCase().includes(q) ||
         dest.subtitle.toLowerCase().includes(q)
     );
-  }, [suggestedDestinations, airbnbLocation]);
+  }, [airbnbLocation]);
 
   // Helper to render one month of the dual-month calendar
   const renderCalendarMonth = (year: number, month: number, isLeft: boolean) => {
@@ -523,7 +523,7 @@ export const CleanDashboard: React.FC = () => {
     });
 
     return result;
-  }, [items, activeAssetClass, activeCategory, minMarginFilter, airbnbLocation, airbnbRisk, searchQuery, sortBy]);
+  }, [items, activeAssetClass, activeCategory, minMarginFilter, airbnbRisk, searchQuery, sortBy]);
 
   // Aggregate Portfolio Metrics
   const totalAllocated = useMemo(() => {

@@ -1,0 +1,13 @@
+- MakeMyTrip / Booking.com are B2C retail OTAs (Online Travel Agencies). They sell individual rooms to end-travelers at consumer prices (e.g., ₹1,05,000 for the Christmas week in Park Street).
+
+- TBO.com is a B2B travel wholesaler / bed-bank. TBO does not buy rooms at retail prices. If TBO bought at ₹1,05,000, there would be zero profit margin.
+
+- We are not interested in seeing where TBO will buy these from since its their responsibility and like they will dealt with their own supply chain 
+
+    - Channel 1: Direct Hotel Contracting (Most Common for Luxury & Boutique Stays)
+    - Channel 2: Global Bedbanks (Wholesale Inventory Aggregators)
+    - Channel 3: Channel Managers & Hospitality Switches
+
+- What is expected of us :
+    - Algorithm & Math (60%)
+    - Business Realism (40%)
